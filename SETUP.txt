@@ -1,0 +1,2 @@
+Download and unzip limine-binary from https://github.com/Limine-Bootloader/Limine/releases
+As at when written, Limine was on v12.3.2
