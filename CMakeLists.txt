@@ -7,7 +7,7 @@ set(CMAKE_SYSTEM_PROCESSOR x86_64)
 # Tell CMake not to look for standard system libraries or compiler runtimes
 set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
 
-project(BareMetalKernel CXX ASM)
+project(BareMetalKernel C CXX ASM)
 
 # Define the Clang cross-compilation flags
 set(BARE_METAL_FLAGS
@@ -30,21 +30,40 @@ set(BARE_METAL_FLAGS
 
 # Apply flags to both the C compiler and the linker
 add_compile_options(${BARE_METAL_FLAGS})
-add_executable(kernel.elf src/main.cpp)
+add_executable(kernel.elf
+                external/flanterm/src/flanterm.c
+                external/flanterm/src/flanterm_backends/fb.c
+                src/main.cpp
+                src/libc/memset.cpp
+                src/libc/memcpy.cpp
+                src/libc/strlen.cpp
+)
 
 set_target_properties(kernel.elf PROPERTIES LINKER_LANGUAGE CXX)
-target_include_directories(kernel.elf PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(kernel.elf PRIVATE
+                            ${CMAKE_CURRENT_SOURCE_DIR}/include
+                            external/flanterm/src)
+
 add_link_options(
     "-m" "elf_x86_64"
     "-static"
     "-T${CMAKE_CURRENT_SOURCE_DIR}/linker.ld"
 )
-
 set(CMAKE_CXX_LINK_EXECUTABLE "<CMAKE_LINKER> <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
 target_link_options(kernel.elf PRIVATE
                     "-T${CMAKE_CURRENT_SOURCE_DIR}/linker.ld"
                     "-z" "max-page-size=0x1000"
                     "-no-pie")
+
+# # Add the Flanterm library as a static library target
+# add_library(flanterm STATIC
+#             external/flanterm/src/flanterm.c
+#             external/flanterm/src/flanterm_backends/fb.c)
+
+# target_include_directories(flanterm PUBLIC
+#                             external/flanterm/src)
+
+# target_link_libraries(kernel.elf PUBLIC flanterm)
 
 # Find the host system tools needed to build an ISO image
 find_program(XORRISO_PATH xorriso REQUIRED)
