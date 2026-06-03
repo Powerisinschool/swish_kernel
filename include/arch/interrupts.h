@@ -1,0 +1,8 @@
+//
+// Created by Tolulope Olagunju on 03/06/2026.
+//
+
+#ifndef BAREMETALKERNEL_INTERRUPTS_H
+#define BAREMETALKERNEL_INTERRUPTS_H
+
+#endif //BAREMETALKERNEL_INTERRUPTS_H
