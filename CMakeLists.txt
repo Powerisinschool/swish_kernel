@@ -37,6 +37,11 @@ add_executable(kernel.elf
                 src/libc/memset.cpp
                 src/libc/memcpy.cpp
                 src/libc/strlen.cpp
+                src/terminal.cpp
+                src/arch/gdt.cpp
+                src/arch/idt.cpp
+                src/drivers/pic.cpp
+                src/drivers/keyboard.cpp
 )
 
 set_target_properties(kernel.elf PROPERTIES LINKER_LANGUAGE CXX)
