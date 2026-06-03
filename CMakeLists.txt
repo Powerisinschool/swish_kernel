@@ -42,12 +42,32 @@ add_executable(kernel.elf
                 src/arch/idt.cpp
                 src/drivers/pic.cpp
                 src/drivers/keyboard.cpp
+
+                # Explicitly listing headers helps CLion's code insight
+                include/limine.h
+                include/string.h
+                include/terminal.h
+                include/arch/gdt.h
+                include/arch/idt.h
+                include/arch/io.h
+                include/drivers/keyboard.h
+                include/drivers/pic.h
+        include/compiler.h
+        include/arch/interrupts.h
+        src/arch/interrupts.cpp
+        src/arch/interrupts.S
 )
 
 set_target_properties(kernel.elf PROPERTIES LINKER_LANGUAGE CXX)
+execute_process(
+        COMMAND ${CMAKE_CXX_COMPILER} -print-resource-dir
+        OUTPUT_VARIABLE CLANG_RESOURCE_DIR
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+)
 target_include_directories(kernel.elf PRIVATE
                             ${CMAKE_CURRENT_SOURCE_DIR}/include
-                            external/flanterm/src)
+                            external/flanterm/src
+                            "${CLANG_RESOURCE_DIR}/include")
 
 add_link_options(
     "-m" "elf_x86_64"

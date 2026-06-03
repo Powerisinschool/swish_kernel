@@ -42,7 +42,9 @@ namespace PIC
 
         // Restore the saved masks
         outb(PIC1_DATA, a1);
+        io_wait();
         outb(PIC2_DATA, a2);
+        io_wait();
     }
 
     void send_eoi(uint8_t irq)
@@ -55,6 +57,12 @@ namespace PIC
 
         // ALWAYS send an EOI to the Master PIC, regardless of where it came from
         outb(PIC1_COMMAND, PIC_EOI);
+    }
+
+    void enable() {
+        // Unmask IRQs 0-7 on the Master PIC
+        outb(PIC1_DATA, 0xFC);
+        outb(PIC2_DATA, 0xFF);
     }
 
     void disable() {

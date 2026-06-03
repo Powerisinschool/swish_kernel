@@ -1,7 +1,31 @@
 #pragma once
 #include <stdint.h>
+#include <compiler.h>
 
-#define KERNEL_PACKED [[gnu::packed]]
+/**
+ * @brief Configuration flags for an IDT entry attributes byte.
+ */
+struct KERNEL_PACKED idt_flags {
+    uint8_t  gate_type : 4; ///< Gate type (Bits 0-3. e.g., 0xE for 64-bit Interrupt, 0xF for Trap).
+    uint8_t  storage   : 1; ///< Storage Segment (Bit 4. Must be 0 for system gates).
+    uint8_t  dpl       : 2; ///< Descriptor Privilege Level (Bits 5-6. 0 = Kernel, 3 = User space).
+    uint8_t  present   : 1; ///< Present flag (Bit 7. Must be 1 for a valid entry).
+
+    // Default constructor (required if you define custom ones)
+    idt_flags() = default;
+
+    idt_flags(uint8_t gate_type, uint8_t dpl, bool present);
+
+    explicit idt_flags(uint8_t val);
+
+    static idt_flags kernel_interrupt();
+
+    static idt_flags user_trap();
+
+    explicit operator uint8_t() const;
+
+    idt_flags &operator=(const uint8_t &value);
+};
 
 /**
  * @brief Represents a 16-byte x86_64 Interrupt Descriptor Table (IDT) entry.
@@ -17,12 +41,7 @@ struct KERNEL_PACKED idt_entry {
     uint8_t  ist       : 3; ///< Interrupt Stack Table offset (Bits 0-2).
     uint8_t  reserved0 : 5; ///< Reserved bits, must be zero (Bits 3-7).
 
-    // --- Type and Attribute Bitfields ---
-    uint8_t  gate_type : 4; ///< Gate type (Bits 0-3. e.g., 0xE for 64-bit Interrupt, 0xF for Trap).
-    uint8_t  storage   : 1; ///< Storage Segment (Bit 4. Must be 0 for system gates).
-    uint8_t  dpl       : 2; ///< Descriptor Privilege Level (Bits 5-6. 0 = Kernel, 3 = User space).
-    uint8_t  present   : 1; ///< Present flag (Bit 7. Must be 1 for a valid entry).
-
+    idt_flags attributes;   ///< Type and Attribute Bitfields
     uint16_t isr_mid;       ///< Middle 16 bits of the ISR address.
     uint32_t isr_high;      ///< Upper 32 bits of the ISR address.
     uint32_t reserved1;     ///< Reserved block by architecture, must be zero.
@@ -47,3 +66,10 @@ struct KERNEL_PACKED idt_ptr {
      */
     uint64_t base;
 };
+
+namespace IDT {
+    // Maps a specific function to a specific interrupt number
+    void set_descriptor(uint8_t vector, void *isr, idt_flags flags);
+    // Load the table onto the CPU
+    void initialize();
+}

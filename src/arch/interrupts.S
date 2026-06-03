@@ -22,11 +22,41 @@ isr\vector:
 // Exceptions 8, 10, 11, 12, 13, 14, 17, 21, 29, and 30 automatically push error codes.
 ISR_NOERR 0
 ISR_NOERR 1
-// ... (You would typically define all 0-31 here for a full OS)
+ISR_NOERR 2
+ISR_NOERR 3
+ISR_NOERR 4
+ISR_NOERR 5
+ISR_NOERR 6
+ISR_NOERR 7
+ISR_ERR 8
+ISR_NOERR 9
+ISR_ERR 10
+ISR_ERR 11
+ISR_ERR 12
+ISR_ERR 13
+ISR_ERR 14
+ISR_NOERR 15
+ISR_NOERR 16
+ISR_ERR 17
+ISR_NOERR 18
+ISR_NOERR 19
+ISR_NOERR 20
+ISR_ERR 21
+ISR_NOERR 22
+ISR_NOERR 23
+ISR_NOERR 24
+ISR_NOERR 25
+ISR_NOERR 26
+ISR_NOERR 27
+ISR_NOERR 28
+ISR_ERR 29
+ISR_ERR 30
+ISR_NOERR 31
 
 // Hardware IRQs (We remapped the PIC to start at 32)
 ISR_NOERR 32 // IRQ 0: System Timer
 ISR_NOERR 33 // IRQ 1: Keyboard
+ISR_NOERR 34 // IRQ 2: PIC Cascade
 // ... (You can define up to 255)
 
 // The Common Stub: All macros jump here

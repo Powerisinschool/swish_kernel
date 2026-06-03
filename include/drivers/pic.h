@@ -15,6 +15,9 @@ namespace PIC {
     // Sends the End of Interrupt signal to the hardware
     void send_eoi(uint8_t irq);
 
+    // Enables the legacy PIC (Limine disables it by default)
+    void enable();
+
     // Completely disables the legacy PIC (useful when moving to APIC later)
     void disable();
 }
