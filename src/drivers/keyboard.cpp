@@ -1,5 +1,6 @@
 #include <drivers/keyboard.h>
 #include <arch/io.h>
+#include <string.h>
 
 #include "terminal.h"
 
@@ -23,6 +24,10 @@ static KeyState keyboard_state[256] = {};
 static bool is_extended = false;
 static bool is_caps = false;
 static bool is_shift_active = false;
+
+static char input_buffer[256];
+static uint8_t to_input_index = 0;
+static uint8_t input_len = 0;
 
 // A standard US QWERTY layout map for the first 128 scancodes
 static constexpr char qwerty_lower[128] = {
@@ -96,32 +101,55 @@ namespace Keyboard {
 
         if (scancode == BACKSPACE_KEY_CODE) {
             cout << "\b \b";
+            input_buffer[to_input_index] = 0;
+            if (to_input_index > 0)
+                to_input_index--;
             return;
         }
 
         if (scancode == ENTER_KEY_CODE) {
             cout << "\r\n";
+            // TODO: capture and send to our future kgetline here
+            cout << "(input_buffer): " << input_buffer << "\r\n";
+            memset(&input_buffer, 0, sizeof(char) * input_len);
+            to_input_index = 0;
+            input_len = 0;
             return;
         }
 
-        if (scancode == LEFT_ARROW_KEY_CODE) {
-            cout << KEY_LEFT_ESC;
-            return;
-        }
+        // if (scancode == LEFT_ARROW_KEY_CODE) {
+        //     cout << KEY_LEFT_ESC;
+        //     if (to_input_index > 0)
+        //         to_input_index--;
+        //     return;
+        // }
+        //
+        // if (scancode == RIGHT_ARROW_KEY_CODE) {
+        //     cout << KEY_RIGHT_ESC;
+        //     if (to_input_index <= input_len)
+        //         to_input_index++;
+        //     return;
+        // }
 
-        if (scancode == RIGHT_ARROW_KEY_CODE) {
-            cout << KEY_RIGHT_ESC;
-            return;
-        }
-
-        const bool is_num = scancode > 0x01 && scancode < 0x0C;
+        // const bool is_num = scancode > 0x01 && scancode < 0x0C;
         const bool should_capitalize = (is_shift_active) ? !is_caps : is_caps;
 
         if (!is_release && !is_extended && keyboard_state[index].is_printable) {
-            if ((is_num && is_shift_active) || (!is_num && should_capitalize))
-                cout << keyboard_state[index].ascii_uppercase;
+            if (to_input_index >= 255) {
+                cout << "\r\nFailed to input (buffer overflow)\r\n" << "\a";
+                return;
+            };
+            const bool is_letter = (keyboard_state[index].ascii_lowercase >= 'a' && keyboard_state[index].ascii_lowercase <= 'z');
+            char c;
+            if ((!is_letter && is_shift_active) || (is_letter && should_capitalize))
+                c = keyboard_state[index].ascii_uppercase;
             else
-                cout << keyboard_state[index].ascii_lowercase;
+                c = keyboard_state[index].ascii_lowercase;
+            input_buffer[to_input_index] = c;
+            cout << c;
+            to_input_index++;
+            if (to_input_index >= input_len)
+                input_len++;
         }
     }
 
