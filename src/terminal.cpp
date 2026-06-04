@@ -2,7 +2,7 @@
 #include <terminal.h>
 extern "C"
 {
-#include <flanterm.h>
+    #include <flanterm.h>
     size_t strlen(const char *str);
 }
 

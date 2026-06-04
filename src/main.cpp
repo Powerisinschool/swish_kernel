@@ -4,6 +4,7 @@
 #include <terminal.h>
 
 #include "arch/idt.h"
+#include "drivers/keyboard.h"
 #include "drivers/pic.h"
 
 extern "C"
@@ -59,11 +60,9 @@ extern "C" [[noreturn]] void _start()
     cout << "Hello" << ' ' << "World" << " from Flanterm!\r\n";
     cout << "Framebuffer resolution: " << static_cast<int64_t>(fb->width) << "x" << static_cast<int64_t>(fb->height) << "\r\n";
 
+    Keyboard::initialize();
     PIC::remap(0x20, 0x28);
-
     PIC::enable();
-    // __asm__ volatile("outb %0, %1" : : "a"((uint8_t)0x01), "Nd"((uint16_t)0x21));
-
     IDT::initialize();
     // __asm__ volatile ("int $12");
 
