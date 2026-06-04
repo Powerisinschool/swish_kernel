@@ -1,0 +1,8 @@
+//
+// Created by Tolulope Olagunju on 04/06/2026.
+//
+
+#ifndef BAREMETALKERNEL_STRING_HPP
+#define BAREMETALKERNEL_STRING_HPP
+
+#endif //BAREMETALKERNEL_STRING_HPP
