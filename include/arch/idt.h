@@ -68,8 +68,30 @@ struct KERNEL_PACKED idt_ptr {
 };
 
 namespace IDT {
-    // Maps a specific function to a specific interrupt number
+    /**
+     * @brief Configures a single 16-byte gate entry in the 64-bit Interrupt Descriptor Table (IDT).
+     *
+     * Populates the specified IDT vector slot with a 64-bit interrupt service routine
+     * address and configuration flags. This function safely splits the 64-bit pointer
+     * across the low, mid, and high fields of the x86_64 IDT gate structure.
+     *
+     * @param vector The target interrupt vector index (0-255).
+     * @param isr 64-bit pointer to the Interrupt Service Routine handler function.
+     * @param flags Configuration bitmask defining gate type, DPL, present bit, and optional IST index.
+     *
+     * @note In x86_64, ensure the target ISR handles the error code pushed by the CPU for specific exceptions.
+     */
     void set_descriptor(uint8_t vector, void *isr, idt_flags flags);
-    // Load the table onto the CPU
+
+    /**
+     * @brief Loads the 64-bit Interrupt Descriptor Table into the CPU's IDTR register.
+     *
+     * Constructs a 10-byte IDTR register structure containing the 16-bit table limit
+     * and the 64-bit base virtual address of the IDT. It then executes the `lidt`
+     * assembly instruction to activate the table on the current CPU core.
+     *
+     * @pre All critical hardware exceptions and PIC/APIC IRQ descriptors must be set.
+     * @warning Any interrupt firing before this call finishes will result in a CPU triple fault.
+     */
     void initialize();
 }

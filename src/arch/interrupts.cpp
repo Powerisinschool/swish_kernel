@@ -28,7 +28,6 @@ extern "C" void interrupt_handler(struct cpu_status* regs)
 
         case 33: // Keyboard Interrupt
             Keyboard::handle_interrupt();
-            // cout << "Keyboard Interrupted!\r\n";
             PIC::send_eoi(1);
             break;
 

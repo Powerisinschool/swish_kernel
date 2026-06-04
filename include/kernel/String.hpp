@@ -1,8 +1,22 @@
-//
-// Created by Tolulope Olagunju on 04/06/2026.
-//
+#pragma once
+#include <string.h>
+#include <stddef.h>
 
-#ifndef BAREMETALKERNEL_STRING_HPP
-#define BAREMETALKERNEL_STRING_HPP
+class String {
+private:
+    char *data;
+    size_t length;
 
-#endif //BAREMETALKERNEL_STRING_HPP
+public:
+    String();
+    String(const char *str);
+    String(const String& other);
+    ~String();
+
+    String &operator=(const String& other);
+    bool operator==(const char *other) const;
+
+    const char *c_str() const;
+    bool empty() const;
+    size_t len() const;
+};

@@ -6,6 +6,9 @@
 #include "arch/idt.h"
 #include "drivers/keyboard.h"
 #include "drivers/pic.h"
+#include "kernel/String.hpp"
+#include "kernel/Shell.h"
+#include "kernel/memory.hpp"
 
 extern "C"
 {
@@ -19,6 +22,9 @@ KERNEL_REQUEST static volatile struct limine_framebuffer_request framebuffer_req
     .id = LIMINE_FRAMEBUFFER_REQUEST_ID,
     .revision = 0,
     .response = nullptr};
+
+// static uint8_t initial_heap_space[1024 * 1024];
+void initialize_physical_memory();
 
 extern "C" [[noreturn]] void _start()
 {
@@ -57,6 +63,10 @@ extern "C" [[noreturn]] void _start()
         0);
 
     cout.initialize(ft_ctx);
+
+    initialize_physical_memory();
+    // init_heap(reinterpret_cast<uintptr_t>(&initial_heap_space), sizeof(initial_heap_space));
+
     cout << "Hello" << ' ' << "World" << " from Flanterm!\r\n";
     cout << "Framebuffer resolution: " << static_cast<int64_t>(fb->width) << "x" << static_cast<int64_t>(fb->height) << "\r\n";
 
@@ -65,6 +75,41 @@ extern "C" [[noreturn]] void _start()
     PIC::enable();
     IDT::initialize();
     // __asm__ volatile ("int $12");
+
+    // cout << "Welcome to the custom OS!\r\n";
+    // char shell_buf[256];
+    //
+    // while (true) {
+    //     cout << "user@kernel:~$ ";
+    //     Keyboard::getline(shell_buf, 256);
+    //     cout << "You typed: " << shell_buf << "\r\n";
+    // }
+
+    char *line;
+    Shell &shell = Shell::getInstance();
+
+    shell.homeEnv = "/";
+    shell.pathEnv = "/bin";
+    shell.HISTORY_FILE = "/.history";
+
+    constexpr size_t MAX_LINE_LEN = 1024;
+    char buffer[MAX_LINE_LEN];
+
+    k_print("Kernel booted. Memory managed by Limine.\r\n\n");
+
+    while (true) {
+        cout << "user@kernel:~$ ";
+        Keyboard::getline(buffer, MAX_LINE_LEN);
+        String input(buffer);
+        // if (input.empty())
+        //     continue;
+        add_history(input);
+
+        if (shell.eval_user_input(input))
+            break;
+    }
+
+    cout << "\r\n[Process completed]\r\n";
 
     while (true)
     {

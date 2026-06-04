@@ -20,14 +20,18 @@
 #define KEY_RIGHT_ESC "\033[C"
 #define KEY_LEFT_ESC  "\033[D"
 
+#define LINE_BUFFER_SIZE 1024
+
+static volatile bool line_ready = false;
+
 static KeyState keyboard_state[256] = {};
 static bool is_extended = false;
 static bool is_caps = false;
 static bool is_shift_active = false;
 
-static char input_buffer[256];
-static uint8_t to_input_index = 0;
-static uint8_t input_len = 0;
+static char input_buffer[LINE_BUFFER_SIZE];
+static uint16_t to_input_index = 0;
+static uint16_t input_len = 0;
 
 // A standard US QWERTY layout map for the first 128 scancodes
 static constexpr char qwerty_lower[128] = {
@@ -100,20 +104,19 @@ namespace Keyboard {
         }
 
         if (scancode == BACKSPACE_KEY_CODE) {
+            if (to_input_index == 0) return;
+
+            input_buffer[to_input_index] = '\0';
+            to_input_index--;
             cout << "\b \b";
-            input_buffer[to_input_index] = 0;
-            if (to_input_index > 0)
-                to_input_index--;
             return;
         }
 
         if (scancode == ENTER_KEY_CODE) {
             cout << "\r\n";
-            // TODO: capture and send to our future kgetline here
-            cout << "(input_buffer): " << input_buffer << "\r\n";
-            memset(&input_buffer, 0, sizeof(char) * input_len);
-            to_input_index = 0;
-            input_len = 0;
+            input_buffer[to_input_index] = '\0';
+            line_ready = true;
+            // cout << "(input_buffer): " << input_buffer << "\r\n";
             return;
         }
 
@@ -135,7 +138,7 @@ namespace Keyboard {
         const bool should_capitalize = (is_shift_active) ? !is_caps : is_caps;
 
         if (!is_release && !is_extended && keyboard_state[index].is_printable) {
-            if (to_input_index >= 255) {
+            if (to_input_index >= LINE_BUFFER_SIZE - 1) {
                 cout << "\r\nFailed to input (buffer overflow)\r\n" << "\a";
                 return;
             };
@@ -155,5 +158,21 @@ namespace Keyboard {
 
     bool is_key_down(const uint8_t scancode) {
         return keyboard_state[scancode].is_down;
+    }
+
+    void getline(char *buffer, size_t max_len) {
+        while (!line_ready) {
+            __asm__ __volatile__("hlt"); // Block the execution thread until the line is ready
+        }
+
+        size_t copy_len = to_input_index < max_len - 1 ? to_input_index : max_len - 1;
+
+        memcpy(buffer, input_buffer, copy_len);
+        buffer[copy_len] = '\0';
+
+        memset(&input_buffer, 0, LINE_BUFFER_SIZE);
+        to_input_index = 0;
+        input_len = 0;
+        line_ready = false;
     }
 }

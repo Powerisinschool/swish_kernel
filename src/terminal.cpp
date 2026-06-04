@@ -1,5 +1,8 @@
 #include <stdint.h>
 #include <terminal.h>
+
+#include "kernel/String.hpp"
+
 extern "C"
 {
     #include <flanterm.h>
@@ -18,6 +21,13 @@ Terminal &Terminal::operator<<(const char *str)
     if (ctx && str)
     {
         flanterm_write(ctx, str, strlen(str));
+    }
+    return *this;
+}
+
+Terminal &Terminal::operator<<(const String &str) {
+    if (ctx && !str.empty()) {
+        flanterm_write(ctx, str.c_str(), str.len());
     }
     return *this;
 }
@@ -63,4 +73,8 @@ Terminal &Terminal::operator<<(int64_t num)
     }
 
     return *this;
+}
+
+void k_print(const char *str) {
+    cout << str;
 }

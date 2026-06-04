@@ -56,6 +56,14 @@ add_executable(kernel.elf
         include/arch/interrupts.h
         src/arch/interrupts.cpp
         src/arch/interrupts.S
+        include/kernel/shell.h
+        include/kernel/String.hpp
+        src/kernel/String.cpp
+        src/kernel/Shell.cpp
+        src/kernel/cxxabi.cpp
+        src/kernel/memory_operators.cpp
+        include/kernel/memory.hpp
+        src/kernel/memory.cpp
 )
 
 set_target_properties(kernel.elf PROPERTIES LINKER_LANGUAGE CXX)
