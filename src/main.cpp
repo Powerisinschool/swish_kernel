@@ -8,7 +8,7 @@
 #include "drivers/pic.h"
 #include "kernel/String.hpp"
 #include "kernel/Shell.h"
-#include "kernel/memory.hpp"
+#include "subsystems/input.h"
 
 extern "C"
 {
@@ -70,7 +70,7 @@ extern "C" [[noreturn]] void _start()
     cout << "Hello" << ' ' << "World" << " from Flanterm!\r\n";
     cout << "Framebuffer resolution: " << static_cast<int64_t>(fb->width) << "x" << static_cast<int64_t>(fb->height) << "\r\n";
 
-    Keyboard::initialize();
+    Input::initialize();
     PIC::remap(0x20, 0x28);
     PIC::enable();
     IDT::initialize();
@@ -99,7 +99,7 @@ extern "C" [[noreturn]] void _start()
 
     while (true) {
         cout << "user@kernel:~$ ";
-        Keyboard::getline(buffer, MAX_LINE_LEN);
+        Input::get_line(buffer, MAX_LINE_LEN);
         String input(buffer);
         // if (input.empty())
         //     continue;

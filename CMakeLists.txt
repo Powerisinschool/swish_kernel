@@ -65,7 +65,9 @@ add_executable(kernel.elf
         include/kernel/memory.hpp
         src/kernel/memory.cpp
         include/utils/ring_buffer.h
-        include/utils/ring_buffer.h
+        src/utils/ring_buffer.cpp
+        src/subsystems/input.cpp
+        include/subsystems/input.h
 )
 
 set_target_properties(kernel.elf PROPERTIES LINKER_LANGUAGE CXX)
