@@ -136,9 +136,9 @@ namespace Input {
                 if (active_context == DisplayContext::TERMINAL) {
                     if (to_input_index == 0) continue;
 
-                    send_to_terminal('\b', false);
-                    send_to_terminal(' ', false);
-                    send_to_terminal('\b', false);
+                    send_to_terminal('\b', false, false);
+                    send_to_terminal(' ', false, false);
+                    send_to_terminal('\b', false, false);
                     // input_buffer[to_input_index] = '\0';
                     to_input_index--;
                     send_to_terminal('\0', true, false, false);
@@ -163,11 +163,11 @@ namespace Input {
             if (!is_release) {
                 // Check for context switch shortcut (Ctrl + Alt + 1 or 0)
                 if (is_ctrl_active && is_alt_active) {
-                    if (index == 0x02) { // Scancode for '1'
+                    if (index == 0x14) { // Scancode for 'T'
                         switch_to_terminal();
                         continue;
                     }
-                    if (index == 0x0B) { // Scancode for '0'
+                    if (index == 0x20) { // Scancode for 'G'
                         switch_to_gui();
                         continue;
                     }
@@ -184,8 +184,18 @@ namespace Input {
 
     void get_line(char *buffer, size_t max_len) {
         while (!line_ready) {
+            __asm__ __volatile__("cli");
             process_events();
-            __asm__ __volatile__("hlt"); // Block the execution thread until the line is ready
+            // __asm__ __volatile__("hlt"); // Block the execution thread until the line is ready
+            if (!line_ready) {
+                // sti enables interrupts, and hlt immediately waits for one.
+                // This specific sequence prevents the CPU from sleeping forever.
+                __asm__ __volatile__("sti");
+                __asm__ __volatile__("hlt");
+            } else {
+                // The line is ready, just re-enable interrupts and exit
+                __asm__ __volatile__("sti");
+            }
         }
 
         size_t copy_len = to_input_index < max_len - 1 ? to_input_index : max_len - 1;
@@ -213,6 +223,9 @@ namespace Input {
         // is_terminal_enabled = true;
         active_context = DisplayContext::TERMINAL;
         cout << "\r\n[Terminal Context Restored]\r\nuser@kernel:~$ ";
+        for (size_t i = 0; i < to_input_index; i++) {
+            send_to_terminal(input_buffer[i], false, false, true);
+        }
     }
 
     void switch_to_gui() {
@@ -236,8 +249,7 @@ namespace Input {
 
     void send_to_gui(const char c) {
         // cout << "GUI is currently active\r\n";
-        // (void)c;
-        cout << c;
+        (void)c;
     }
 
     void send_to_active_context(const char c) {
