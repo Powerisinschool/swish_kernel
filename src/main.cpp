@@ -109,6 +109,7 @@ extern "C" [[noreturn]] void _start()
             break;
     }
 
+    Keyboard::disable();
     cout << "\r\n[Process completed]\r\n";
 
     while (true)

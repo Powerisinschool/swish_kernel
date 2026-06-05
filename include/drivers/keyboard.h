@@ -59,4 +59,6 @@ namespace Keyboard {
      * @pre Interrupts must be enabled and the keyboard driver initialized.
      */
     void getline(char *buffer, size_t max_len);
+
+    void disable();
 }

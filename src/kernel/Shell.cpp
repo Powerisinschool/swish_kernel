@@ -3,7 +3,7 @@
 #include "terminal.h"
 
 bool is_shell_builtin(const String& cmd) {
-    if (cmd == "help" || cmd == "clear" || cmd == "echo") {
+    if (cmd == "help" || cmd == "clear" || cmd == "echo" || cmd == "exit") {
         return true;
     }
     return false;
@@ -11,6 +11,9 @@ bool is_shell_builtin(const String& cmd) {
 
 // Forward declaration of the built-in processor
 bool process_builtin(const String& cmd, String* args, int argCount) {
+    if (cmd == "exit") {
+        return true;
+    }
     cout << "[Shell built-in command `" << cmd << "`]\r\n";
     if (argCount > 1) {
         cout << "Args:\r\n";

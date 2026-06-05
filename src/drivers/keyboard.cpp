@@ -22,6 +22,8 @@
 
 #define LINE_BUFFER_SIZE 1024
 
+static bool is_enabled = true;
+
 static volatile bool line_ready = false;
 
 static KeyState keyboard_state[256] = {};
@@ -66,8 +68,11 @@ namespace Keyboard {
         }
     }
 
-    void handle_interrupt() {
+    void handle_interrupt() { // ISR
         const uint8_t scancode = inb(0x60); // Clear the buffer and allow future interrupts
+        if (!is_enabled) {
+            return;
+        }
 
         if (scancode == EXTENSION_CODE) {
             is_extended = true;
@@ -161,7 +166,12 @@ namespace Keyboard {
     }
 
     void getline(char *buffer, size_t max_len) {
-        while (!line_ready) {
+        if (!is_enabled) {
+            buffer[0] = '\0';
+            return;
+        }
+
+        while (!line_ready && is_enabled) {
             __asm__ __volatile__("hlt"); // Block the execution thread until the line is ready
         }
 
@@ -174,5 +184,9 @@ namespace Keyboard {
         to_input_index = 0;
         input_len = 0;
         line_ready = false;
+    }
+
+    void disable() {
+        is_enabled = false;
     }
 }
