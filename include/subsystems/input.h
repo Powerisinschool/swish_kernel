@@ -2,6 +2,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "gui/Compositor.h"
+
 enum class DisplayContext {
     TERMINAL,
     GUI
@@ -25,6 +27,7 @@ namespace Input {
      * @note Must be called before enabling hardware interrupts.
      */
     void initialize();
+    void set_compositor(Compositor *comp);
 
     /**
      * @brief Processes keyboard scancodes from the input queue

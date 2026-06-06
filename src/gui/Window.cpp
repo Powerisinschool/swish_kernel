@@ -3,27 +3,36 @@
 #include "string.h"
 #include "kernel/memory.hpp"
 
-Window::Window(const size_t x, const size_t y, const size_t width, const size_t height) : x(x), y(y), width(width), height(height) {
-    pixel_buffer = static_cast<uint32_t *>(kmalloc(width * height * sizeof(uint32_t)));
+Window::Window(const size_t x, const size_t y, const size_t width, const size_t height) : x(x),
+    y(y) {
+    const auto pixel_buffer = static_cast<uint32_t *>(kmalloc(width * height * sizeof(uint32_t)));
+    surface = new Surface{pixel_buffer, width, height, width * sizeof(uint32_t), Color::white};
 
     for (size_t i = 0; i < width * height; i++) {
-        pixel_buffer[i] = Color{50, 50, 50, 255}.get_bytes();
+        pixel_buffer[i] = Color::white.get_bytes();
     }
 }
 
+void Window::inject_key(const char c) {
+    if (c == '\b') {
+        if (char_index > 0) {
+            text_buffer[--char_index] = ' ';
+        }
+    } else {
+        if (char_index >= 31) return;
+        text_buffer[char_index++] = c;
+        text_buffer[char_index] = '\0';
+    }
+    Graphics::draw_string(surface, 10, 10, text_buffer, Color::black);
+}
+
 void Window::render() const {
-    for (size_t row = 0; row < height; row++) {
-
-        // Ask the Graphics layer for the exact screen memory address for this row
+    Graphics::draw_string(surface, 10, 10, text_buffer, Color::black);
+    for (size_t row = 0; row < surface->height; row++) {
         uint32_t *screen_row_ptr = Graphics::get_buffer_address(x, y + row);
-
-        // If the row is off the bottom of the screen, skip it to prevent a crash
         if (!screen_row_ptr) continue;
 
-        // Calculate the starting address of the current row in our private buffer
-        const uint32_t *window_row_ptr = pixel_buffer + (row * width);
-
-        // Copy exactly one row of pixels
-        memcpy(screen_row_ptr, window_row_ptr, width * sizeof(uint32_t));
+        const uint32_t *window_row_ptr = surface->buffer + (row * surface->width);
+        memcpy(screen_row_ptr, window_row_ptr, surface->width * sizeof(uint32_t));
     }
 }

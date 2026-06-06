@@ -3,7 +3,8 @@
 #include "gui/Graphics.h"
 #include "subsystems/input.h"
 
-Compositor::Compositor() {
+Compositor::Compositor(Surface *surface) {
+    rootSurface = surface;
     head = nullptr;
     tail = nullptr;
 }
@@ -23,8 +24,13 @@ void Compositor::add_window(Window *window) {
     }
 }
 
+void Compositor::inject_key(const char c) const {
+    if (tail == nullptr) return;
+    tail->window->inject_key(c);
+}
+
 void Compositor::render() const {
-    Graphics::draw_bg();
+    Graphics::draw_bg(rootSurface);
     const CompositorWindow *currentWindow = head;
     while (currentWindow != nullptr) {
         currentWindow->window->render();

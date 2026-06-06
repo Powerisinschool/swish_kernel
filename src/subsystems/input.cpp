@@ -30,6 +30,7 @@
 
 static volatile bool line_ready = false;
 static volatile bool dirty = true; // Start dirty to flush any updates
+static Compositor *compositor = nullptr;
 
 static KeyState keyboard_state[256] = {};
 static bool is_extended = false;
@@ -77,6 +78,10 @@ namespace Input {
             }
             keyboard_state[i].is_printable = (qwerty_lower[i] != 0);
         }
+    }
+
+    void set_compositor(Compositor *comp) {
+        compositor = comp;
     }
 
     void process_events() {
@@ -293,7 +298,8 @@ namespace Input {
 
     void send_to_gui(const char c) {
         // cout << "GUI is currently active\r\n";
-        (void)c;
+        if (compositor == nullptr) return;
+        compositor->inject_key(c);
     }
 
     void send_to_active_context(const char c) {

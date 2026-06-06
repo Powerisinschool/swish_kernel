@@ -9,10 +9,12 @@ struct CompositorWindow {
 
 class Compositor {
 public:
-    explicit Compositor();
+    explicit Compositor(Surface *surface);
     void add_window(Window* window);
+    void inject_key(char c) const;
     void render() const;
 private:
+    Surface *rootSurface;
     CompositorWindow *head;
     CompositorWindow *tail;
 };

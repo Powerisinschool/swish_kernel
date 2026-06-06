@@ -8,7 +8,6 @@ static uint32_t *framebuffer;
 static size_t width, height, pitch;
 static uint32_t *terminal_buffer;
 static uint32_t *local_buffer;
-static Color bg;
 
 Color::Color() : r(255), g(255), b(255), a(255) {}
 
@@ -23,6 +22,11 @@ Color::Color(const uint32_t color) {
 }
 
 Color Color::white = Color(255, 255, 255, 255);
+Color Color::black = Color(0, 0, 0, 255);
+
+Color Color::withAlpha(const uint8_t alpha) const {
+    return Color(r, g, b, alpha);
+}
 
 uint32_t Color::get_bytes() const {
     return static_cast<uint32_t>(b) |
@@ -31,8 +35,10 @@ uint32_t Color::get_bytes() const {
           (static_cast<uint32_t>(a) << 24);
 }
 
+Surface::Surface(uint32_t *buffer, const size_t width, const size_t height, const size_t pitch, const Color background) : buffer(buffer), width(width), height(height), pitch(pitch), background(background) {}
+
 namespace Graphics {
-    void initialize(const limine_framebuffer *fb) {
+    Surface initialize(const limine_framebuffer *fb) {
         framebuffer = static_cast<uint32_t *>(fb->address);
         width = fb->width;
         height = fb->height;
@@ -42,44 +48,41 @@ namespace Graphics {
         memset(local_buffer, 0, pitch * height);
         terminal_buffer = static_cast<uint32_t *>(kmalloc(pitch * height));
         memset(terminal_buffer, 0, pitch * height);
+        return Surface{local_buffer, width, height, pitch, Color::black};
     }
 
     void swap_buffers(const bool is_gui) {
         memcpy(framebuffer, is_gui ? local_buffer : terminal_buffer, pitch * height);
     }
 
-    void set_bg(const Color color) {
-        bg = color;
+    void set_bg(Surface *dest, const Color color) {
+        dest->background = color;
     }
 
-    void draw_bg() {
-        draw_rect_filled(0, 0, width, height, bg);
+    void draw_bg(Surface *dest) {
+        draw_rect_filled(dest, 0, 0, dest->width, dest->height, dest->background);
     }
 
-    // Color get_bg() {
-    //     return bg;
-    // }
-
-    void draw_pixel(const uint32_t x, const uint32_t y, const Color color) {
-        if (x >= width || y >= height) {
+    void draw_pixel(Surface *dest, const uint32_t x, const uint32_t y, const Color color) {
+        if (x >= dest->width || y >= dest->height) {
             return;
         }
-        auto* pixel_address = reinterpret_cast<uint32_t *>(reinterpret_cast<uintptr_t>(local_buffer) + (y * pitch) + (x * sizeof(uint32_t)));
+        auto* pixel_address = reinterpret_cast<uint32_t *>(reinterpret_cast<uintptr_t>(dest->buffer) + (y * dest->pitch) + (x * sizeof(uint32_t)));
         *pixel_address = color.get_bytes();
     }
 
-    void draw_rect_filled(const uint32_t x, const uint32_t y, const size_t w, const size_t h, const Color color) {
-        const uint32_t end_x = (x + w > width) ? width : x + w;
-        const uint32_t end_y = (y + h > height) ? height : y + h;
+    void draw_rect_filled(Surface *dest, const uint32_t x, const uint32_t y, const size_t w, const size_t h, const Color color) {
+        const uint32_t end_x = (x + w > dest->width) ? dest->width : x + w;
+        const uint32_t end_y = (y + h > dest->height) ? dest->height : y + h;
 
         for (size_t i = y; i < end_y; i++) {
             for (size_t j = x; j < end_x; j++) {
-                draw_pixel(j, i, color);
+                draw_pixel(dest, j, i, color);
             }
         }
     }
 
-    void draw_char(const uint32_t x, const uint32_t y, char c, const Color color) {
+    void draw_char(Surface *dest, const uint32_t x, const uint32_t y, char c, const Color color) {
         if (c < 32 || c > 126) {
             c = ' ';
         }
@@ -91,20 +94,20 @@ namespace Graphics {
             const uint8_t bottom_byte = font8x16[index][cx + 8];
             for (uint32_t cy = 0; cy < 8; cy++) {
                 if (top_byte & (1 << cy)) {
-                    draw_pixel(x + cx, y + cy, color);
+                    draw_pixel(dest, x + cx, y + cy, color);
                 } else {
-                    draw_pixel(x + cx, y + cy, bg);
+                    draw_pixel(dest, x + cx, y + cy, dest->background);
                 }
                 if (bottom_byte & (1 << cy)) {
-                    draw_pixel(x + cx, y + cy + 8, color);
+                    draw_pixel(dest, x + cx, y + cy + 8, color);
                 } else {
-                    draw_pixel(x + cx, y + cy + 8, bg);
+                    draw_pixel(dest, x + cx, y + cy + 8, dest->background);
                 }
             }
         }
     }
 
-    void draw_string(const uint32_t x, const uint32_t y, const char *str, const Color color) {
+    void draw_string(Surface *dest, const uint32_t x, const uint32_t y, const char *str, const Color color) {
         uint32_t current_x = x;
         uint32_t current_y = y;
 
@@ -115,7 +118,7 @@ namespace Graphics {
                 continue;
             }
 
-            draw_char(current_x, current_y, str[i], color);
+            draw_char(dest, current_x, current_y, str[i], color);
 
             current_x += 8;
         }

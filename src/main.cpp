@@ -43,15 +43,15 @@ extern "C" [[noreturn]] void _start()
 
     initialize_physical_memory();
 
-    Graphics::initialize(fb);
-    Graphics::set_bg(Color{0, 100, 150, 255});
+    auto rootSurface = Graphics::initialize(fb);
+    Graphics::set_bg(&rootSurface, Color{0, 100, 150, 255});
     // Graphics::draw_rect_filled(fb->width/4, fb->height/4, fb->width/2, fb->height/2, Color{0xFF0000FF});
     // Graphics::draw_rect_filled(0, 0, fb->width, fb->height, Graphics::get_bg()); // Blue desktop
     // Graphics::draw_string(100, 100, "ABC", Color{255, 255, 255, 255}); // White text
     // Graphics::swap_buffers(true);
 
-    Window window1(300, 250, 300, 300);
-    Compositor compositor;
+    Window window1(fb->width / 6, fb->height / 6, (4 * fb->width) / 6, (4 * fb->height) / 6);
+    Compositor compositor(&rootSurface);
     compositor.add_window(&window1);
     compositor.render();
 
@@ -124,6 +124,8 @@ extern "C" [[noreturn]] void _start()
     //         break;
     // }
     //
+
+    Input::set_compositor(&compositor);
 
     while (true) {
         __asm__ volatile("cli");
