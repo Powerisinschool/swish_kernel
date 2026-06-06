@@ -29,6 +29,7 @@
 // static bool is_terminal_enabled = true;
 
 static volatile bool line_ready = false;
+static volatile bool dirty = true; // Start dirty to flush any updates
 
 static KeyState keyboard_state[256] = {};
 static bool is_extended = false;
@@ -133,6 +134,9 @@ namespace Input {
                 continue;
             }
 
+            // All functionality below will update the buffer
+            dirty = true;
+
             if (scancode == BACKSPACE_KEY_CODE) {
                 if (active_context == DisplayContext::TERMINAL) {
                     if (to_input_index == 0) continue;
@@ -213,6 +217,32 @@ namespace Input {
         line_ready = false;
     }
 
+    bool is_line_ready() {
+        return line_ready;
+    }
+
+    void fetch_line(char *buffer, const size_t max_len) {
+        const size_t copy_len = to_input_index < max_len - 1 ? to_input_index : max_len - 1;
+
+        memcpy(buffer, input_buffer, copy_len);
+        buffer[copy_len] = '\0';
+
+        memset(&input_buffer, 0, LINE_BUFFER_SIZE);
+        to_input_index = 0;
+        input_len = 0;
+        line_ready = false;
+    }
+
+    bool is_terminal_dirty() {
+        return dirty;
+    }
+
+    void flush_terminal_updates() {
+        if (active_context != DisplayContext::TERMINAL) return;
+        Graphics::swap_buffers(false);
+        dirty = false;
+    }
+
     char determine_case(const uint8_t index) {
         const bool is_letter = (keyboard_state[index].ascii_lowercase >= 'a' && keyboard_state[index].ascii_lowercase <= 'z');
         char c;
@@ -225,7 +255,7 @@ namespace Input {
 
     void switch_to_terminal() {
         // is_terminal_enabled = true;
-        if (active_context == DisplayContext::TERMINAL) return;
+        // if (active_context == DisplayContext::TERMINAL) return;
         // if (active_context == DisplayContext::GUI) {
         //     char s[input_len];
         //     memset(s, ' ', input_len);

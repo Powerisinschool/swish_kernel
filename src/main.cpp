@@ -102,7 +102,6 @@ extern "C" [[noreturn]] void _start()
     //     cout << "You typed: " << shell_buf << "\r\n";
     // }
 
-    char *line;
     Shell &shell = Shell::getInstance();
 
     shell.homeEnv = "/";
@@ -110,20 +109,46 @@ extern "C" [[noreturn]] void _start()
     shell.HISTORY_FILE = "/.history";
 
     constexpr size_t MAX_LINE_LEN = 1024;
-    char buffer[MAX_LINE_LEN];
 
     k_print("Kernel booted. Memory managed by Limine.\r\n\n");
 
-    while (true) {
-        cout << "user@kernel:~$ ";
-        Input::get_line(buffer, MAX_LINE_LEN);
-        String input(buffer);
-        // if (input.empty())
-        //     continue;
-        add_history(input);
+    cout << "user@kernel:~$ ";
+    // while (true) {
+    //     Input::get_line(buffer, MAX_LINE_LEN);
+    //     String input(buffer);
+    //     // if (input.empty())
+    //     //     continue;
+    //     add_history(input);
+    //
+    //     if (shell.eval_user_input(input))
+    //         break;
+    // }
+    //
 
-        if (shell.eval_user_input(input))
-            break;
+    while (true) {
+        __asm__ volatile("cli");
+        Input::process_events();
+        // Mouse::process_events();
+        __asm__ volatile("sti");
+
+        if (Input::get_display_context() == DisplayContext::TERMINAL) {
+            if (Input::is_line_ready()) {
+                char buffer[MAX_LINE_LEN];
+                Input::fetch_line(buffer, MAX_LINE_LEN);
+                if (shell.eval_user_input(String(buffer)))
+                    break;
+                cout << "user@kernel:~$ ";
+
+                Input::flush_terminal_updates();
+            }
+            if (Input::is_terminal_dirty()) {
+                Input::flush_terminal_updates();
+            }
+        } else if (Input::get_display_context() == DisplayContext::GUI) {
+            compositor.render();
+        }
+
+        __asm__ volatile("hlt");
     }
 
     Keyboard::disable();

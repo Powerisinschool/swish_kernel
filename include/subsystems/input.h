@@ -32,6 +32,7 @@ namespace Input {
     void process_events();
 
     /**
+     * @deprecated Prefer non-blocking
      * @brief Reads a line of text from the keyboard input stream.
      *
      * Synchronously retrieves characters from the keyboard buffer until a
@@ -44,6 +45,10 @@ namespace Input {
      * @pre Interrupts must be enabled and the input router initialized.
      */
     void get_line(char *buffer, size_t max_len);
+    bool is_line_ready();
+    void fetch_line(char *buffer, size_t max_len);
+    bool is_terminal_dirty();
+    void flush_terminal_updates();
     char determine_case(uint8_t index);
     void switch_to_terminal();
     void switch_to_gui();
