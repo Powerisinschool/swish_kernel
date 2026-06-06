@@ -42,7 +42,11 @@ extern "C" [[noreturn]] void _start()
     initialize_physical_memory();
 
     Graphics::initialize(fb);
-    Graphics::draw_rect_filled(fb->width/4, fb->height/4, fb->width/2, fb->height/2, Color{0xFF0000FF});
+    Graphics::set_bg(Color{0, 100, 150, 255});
+    // Graphics::draw_rect_filled(fb->width/4, fb->height/4, fb->width/2, fb->height/2, Color{0xFF0000FF});
+    Graphics::draw_rect_filled(0, 0, fb->width, fb->height, Graphics::get_bg()); // Blue desktop
+    Graphics::draw_string(100, 100, "ABC", Color{255, 255, 255, 255}); // White text
+    Graphics::swap_buffers(true);
 
     struct flanterm_context *ft_ctx = flanterm_fb_init(
         nullptr,

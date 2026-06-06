@@ -72,6 +72,9 @@ add_executable(kernel.elf
         src/gui/Graphics.cpp
         src/drivers/mouse.cpp
         include/drivers/mouse.h
+        include/gui/Font.h
+        src/gui/Font.cpp
+        include/gui/Window.h
 )
 
 set_target_properties(kernel.elf PROPERTIES LINKER_LANGUAGE CXX)

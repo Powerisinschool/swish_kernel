@@ -1,8 +1,6 @@
-//
-// Created by Tolulope Olagunju on 06/06/2026.
-//
+#pragma once
+#include <stdint.h>
 
-#ifndef BAREMETALKERNEL_FONT_H
-#define BAREMETALKERNEL_FONT_H
-
-#endif //BAREMETALKERNEL_FONT_H
+namespace Graphics {
+    extern const uint8_t font8x16[95][16];
+}

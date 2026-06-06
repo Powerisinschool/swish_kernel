@@ -225,6 +225,13 @@ namespace Input {
 
     void switch_to_terminal() {
         // is_terminal_enabled = true;
+        if (active_context == DisplayContext::TERMINAL) return;
+        // if (active_context == DisplayContext::GUI) {
+        //     char s[input_len];
+        //     memset(s, ' ', input_len);
+        //     Graphics::draw_string(10, 10, s, Graphics::get_bg());
+        // }
+
         active_context = DisplayContext::TERMINAL;
         // cout << "\r\n[Terminal Context Restored]\r\nuser@kernel:~$ ";
         // for (size_t i = 0; i < to_input_index; i++) {
@@ -236,6 +243,9 @@ namespace Input {
         // is_terminal_enabled = false;
         // cout << "\r\n";
         active_context = DisplayContext::GUI;
+        // Graphics::draw_string(10, 10, "Current input:", Color::white);
+        // Graphics::draw_string(10, 30, input_buffer, Color::white);
+        // Graphics::swap_buffers(active_context == DisplayContext::GUI);
     }
 
     void send_to_terminal(const char c, const bool should_buffer, const bool should_increment, const bool should_print) {
