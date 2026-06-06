@@ -4,6 +4,7 @@
 
 #include "string.h"
 #include "terminal.h"
+#include "gui/Graphics.h"
 
 #define EXTENSION_CODE 0xE0
 #define RELEASE_KEY_CODE 0x80
@@ -188,6 +189,7 @@ namespace Input {
             process_events();
             // __asm__ __volatile__("hlt"); // Block the execution thread until the line is ready
             if (!line_ready) {
+                Graphics::swap_buffers(active_context == DisplayContext::GUI);
                 // sti enables interrupts, and hlt immediately waits for one.
                 // This specific sequence prevents the CPU from sleeping forever.
                 __asm__ __volatile__("sti");
@@ -197,6 +199,8 @@ namespace Input {
                 __asm__ __volatile__("sti");
             }
         }
+
+        Graphics::swap_buffers(active_context == DisplayContext::GUI);
 
         size_t copy_len = to_input_index < max_len - 1 ? to_input_index : max_len - 1;
 
@@ -222,10 +226,10 @@ namespace Input {
     void switch_to_terminal() {
         // is_terminal_enabled = true;
         active_context = DisplayContext::TERMINAL;
-        cout << "\r\n[Terminal Context Restored]\r\nuser@kernel:~$ ";
-        for (size_t i = 0; i < to_input_index; i++) {
-            send_to_terminal(input_buffer[i], false, false, true);
-        }
+        // cout << "\r\n[Terminal Context Restored]\r\nuser@kernel:~$ ";
+        // for (size_t i = 0; i < to_input_index; i++) {
+        //     send_to_terminal(input_buffer[i], false, false, true);
+        // }
     }
 
     void switch_to_gui() {
@@ -258,5 +262,9 @@ namespace Input {
         } else if (active_context == DisplayContext::GUI) {
             send_to_gui(c);
         }
+    }
+
+    DisplayContext &get_display_context() {
+        return active_context;
     }
 }

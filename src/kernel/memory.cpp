@@ -1,16 +1,21 @@
 #include <limine.h>
 #include <kernel/memory.hpp>
-#include <terminal.h>
+// #include <terminal.h>
 
 static volatile struct limine_memmap_request memmap_request = {
     .id = LIMINE_MEMMAP_REQUEST_ID,
     .revision = 0
 };
 
+static volatile struct limine_hhdm_request hhdm_request = {
+    .id = LIMINE_HHDM_REQUEST_ID,
+    .revision = 0
+};
+
 void initialize_physical_memory() {
     // Check if Limine actually provided the response
     if (memmap_request.response == nullptr) {
-        k_print("PANIC: Limine did not provide a memory map!\r\n");
+        // k_print("PANIC: Limine did not provide a memory map!\r\n");
         while (true) {} // Halt
     }
 
@@ -35,12 +40,19 @@ void initialize_physical_memory() {
         }
     }
 
+    if (hhdm_request.response == nullptr) {
+        // k_print("PANIC: No HHDM provided by bootloader!\r\n");
+        while (true) {}
+    }
+
+    uint64_t hhdm_offset = hhdm_request.response->offset;
+
     // 4. Initialize our linked-list heap with the physical memory Limine found
     if (largest_size > 0) {
-        init_heap(highest_base, largest_size);
-        k_print("Heap initialized successfully with Limine data.\r\n");
+        init_heap(highest_base + hhdm_offset, largest_size);
+        // k_print("Heap initialized successfully with Limine data.\r\n");
     } else {
-        k_print("PANIC: No usable memory found by Limine!\r\n");
+        // k_print("PANIC: No usable memory found by Limine!\r\n");
         while (true) {} // Halt
     }
 }

@@ -6,6 +6,7 @@
 #include "arch/idt.h"
 #include "drivers/keyboard.h"
 #include "drivers/pic.h"
+#include "gui/Graphics.h"
 #include "kernel/String.hpp"
 #include "kernel/Shell.h"
 #include "subsystems/input.h"
@@ -38,10 +39,15 @@ extern "C" [[noreturn]] void _start()
     }
     struct limine_framebuffer *fb = framebuffer_request.response->framebuffers[0];
 
+    initialize_physical_memory();
+
+    Graphics::initialize(fb);
+    Graphics::draw_rect_filled(fb->width/4, fb->height/4, fb->width/2, fb->height/2, Color{0xFF0000FF});
+
     struct flanterm_context *ft_ctx = flanterm_fb_init(
         nullptr,
         nullptr,
-        static_cast<uint32_t *>(fb->address),
+        Graphics::get_terminal_buffer(),
         fb->width,
         fb->height,
         fb->pitch,
@@ -64,7 +70,6 @@ extern "C" [[noreturn]] void _start()
 
     cout.initialize(ft_ctx);
 
-    initialize_physical_memory();
     // init_heap(reinterpret_cast<uintptr_t>(&initial_heap_space), sizeof(initial_heap_space));
 
     cout << "Hello" << ' ' << "World" << " from Flanterm!\r\n";
@@ -74,6 +79,7 @@ extern "C" [[noreturn]] void _start()
     PIC::remap(0x20, 0x28);
     PIC::enable();
     IDT::initialize();
+
     // __asm__ volatile ("int $12");
 
     // cout << "Welcome to the custom OS!\r\n";
@@ -111,6 +117,8 @@ extern "C" [[noreturn]] void _start()
 
     Keyboard::disable();
     cout << "\r\n[Process completed]\r\n";
+
+    Graphics::swap_buffers(Input::get_display_context() == DisplayContext::GUI);
 
     while (true)
     {

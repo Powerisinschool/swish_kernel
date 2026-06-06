@@ -50,4 +50,5 @@ namespace Input {
     void send_to_terminal(char c, bool should_buffer = true, bool should_increment = true, bool should_print = true);
     void send_to_gui(char c);
     void send_to_active_context(char c);
+    DisplayContext &get_display_context();
 }
