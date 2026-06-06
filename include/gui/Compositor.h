@@ -1,0 +1,8 @@
+//
+// Created by Tolulope Olagunju on 06/06/2026.
+//
+
+#ifndef BAREMETALKERNEL_COMPOSITOR_H
+#define BAREMETALKERNEL_COMPOSITOR_H
+
+#endif //BAREMETALKERNEL_COMPOSITOR_H
