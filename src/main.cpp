@@ -6,7 +6,9 @@
 #include "arch/idt.h"
 #include "drivers/keyboard.h"
 #include "drivers/pic.h"
+#include "gui/Compositor.h"
 #include "gui/Graphics.h"
+#include "gui/Window.h"
 #include "kernel/String.hpp"
 #include "kernel/Shell.h"
 #include "subsystems/input.h"
@@ -44,9 +46,14 @@ extern "C" [[noreturn]] void _start()
     Graphics::initialize(fb);
     Graphics::set_bg(Color{0, 100, 150, 255});
     // Graphics::draw_rect_filled(fb->width/4, fb->height/4, fb->width/2, fb->height/2, Color{0xFF0000FF});
-    Graphics::draw_rect_filled(0, 0, fb->width, fb->height, Graphics::get_bg()); // Blue desktop
-    Graphics::draw_string(100, 100, "ABC", Color{255, 255, 255, 255}); // White text
-    Graphics::swap_buffers(true);
+    // Graphics::draw_rect_filled(0, 0, fb->width, fb->height, Graphics::get_bg()); // Blue desktop
+    // Graphics::draw_string(100, 100, "ABC", Color{255, 255, 255, 255}); // White text
+    // Graphics::swap_buffers(true);
+
+    Window window1(300, 250, 300, 300);
+    Compositor compositor;
+    compositor.add_window(&window1);
+    compositor.render();
 
     struct flanterm_context *ft_ctx = flanterm_fb_init(
         nullptr,

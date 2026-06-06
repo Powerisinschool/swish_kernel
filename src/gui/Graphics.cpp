@@ -39,7 +39,7 @@ namespace Graphics {
         pitch = fb->pitch;
 
         local_buffer = static_cast<uint32_t *>(kmalloc(pitch * height));
-        memset(local_buffer, 0xFF, pitch * height);
+        memset(local_buffer, 0, pitch * height);
         terminal_buffer = static_cast<uint32_t *>(kmalloc(pitch * height));
         memset(terminal_buffer, 0, pitch * height);
     }
@@ -52,9 +52,13 @@ namespace Graphics {
         bg = color;
     }
 
-    Color get_bg() {
-        return bg;
+    void draw_bg() {
+        draw_rect_filled(0, 0, width, height, bg);
     }
+
+    // Color get_bg() {
+    //     return bg;
+    // }
 
     void draw_pixel(const uint32_t x, const uint32_t y, const Color color) {
         if (x >= width || y >= height) {
@@ -115,6 +119,17 @@ namespace Graphics {
 
             current_x += 8;
         }
+    }
+
+    uint32_t *get_buffer() {
+        return local_buffer;
+    }
+
+    uint32_t *get_buffer_address(const uint32_t x, const uint32_t y) {
+        if (x >= width || y >= height) {
+            return nullptr;
+        }
+        return reinterpret_cast<uint32_t *>(reinterpret_cast<uintptr_t>(local_buffer) + (y * pitch) + (x * sizeof(uint32_t)));
     }
 
     uint32_t *get_terminal_buffer() {

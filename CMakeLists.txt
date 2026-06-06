@@ -75,6 +75,9 @@ add_executable(kernel.elf
         include/gui/Font.h
         src/gui/Font.cpp
         include/gui/Window.h
+        src/gui/Window.cpp
+        include/gui/Compositor.h
+        src/gui/Compositor.cpp
 )
 
 set_target_properties(kernel.elf PROPERTIES LINKER_LANGUAGE CXX)

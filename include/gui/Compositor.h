@@ -1,8 +1,18 @@
-//
-// Created by Tolulope Olagunju on 06/06/2026.
-//
+#pragma once
+#include "Window.h"
 
-#ifndef BAREMETALKERNEL_COMPOSITOR_H
-#define BAREMETALKERNEL_COMPOSITOR_H
+struct CompositorWindow {
+    CompositorWindow *next;
+    Window *window;
+    CompositorWindow *prev;
+};
 
-#endif //BAREMETALKERNEL_COMPOSITOR_H
+class Compositor {
+public:
+    explicit Compositor();
+    void add_window(Window* window);
+    void render() const;
+private:
+    CompositorWindow *head;
+    CompositorWindow *tail;
+};
