@@ -78,6 +78,8 @@ namespace Input {
             }
             keyboard_state[i].is_printable = (qwerty_lower[i] != 0);
         }
+        flush_terminal_updates();
+        dirty = true;
     }
 
     void set_compositor(Compositor *comp) {

@@ -7,6 +7,7 @@ extern "C" void isr13();
 extern "C" void isr14();
 extern "C" void isr32();
 extern "C" void isr33();
+extern "C" void isr44();
 
 static idt_entry idt[256];
 static idt_ptr idtr;
@@ -70,6 +71,7 @@ namespace IDT {
 
         set_descriptor(32, reinterpret_cast<void*>(isr32), idt_flags::kernel_interrupt()); // Timer
         set_descriptor(33, reinterpret_cast<void*>(isr33), idt_flags::kernel_interrupt()); // Keyboard
+        set_descriptor(44, reinterpret_cast<void*>(isr44), idt_flags::kernel_interrupt()); // Keyboard
 
         idtr.limit = (sizeof(idt_entry) * 256) - 1;
         idtr.base = reinterpret_cast<uint64_t>(&idt);

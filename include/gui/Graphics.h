@@ -39,4 +39,6 @@ namespace Graphics {
     uint32_t *get_buffer();
     uint32_t *get_buffer_address(uint32_t x, uint32_t y);
     uint32_t *get_terminal_buffer();
+    size_t get_width();
+    size_t get_height();
 }

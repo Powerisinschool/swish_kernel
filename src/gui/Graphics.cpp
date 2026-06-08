@@ -138,4 +138,12 @@ namespace Graphics {
     uint32_t *get_terminal_buffer() {
         return terminal_buffer;
     }
+
+    size_t get_width() {
+        return width;
+    }
+
+    size_t get_height() {
+        return height;
+    }
 }

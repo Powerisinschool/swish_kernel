@@ -1,5 +1,6 @@
 #include <gui/Compositor.h>
 
+#include "drivers/mouse.h"
 #include "gui/Graphics.h"
 #include "subsystems/input.h"
 
@@ -31,10 +32,16 @@ void Compositor::inject_key(const char c) const {
 
 void Compositor::render() const {
     Graphics::draw_bg(rootSurface);
+
+    // Draw all windows
     const CompositorWindow *currentWindow = head;
     while (currentWindow != nullptr) {
         currentWindow->window->render();
         currentWindow = currentWindow->next;
     }
+
+    // Draw the mouse cursor (a simple 5x5 red square) on top of everything
+    Graphics::draw_rect_filled(rootSurface, mouse_x, mouse_y, 5, 5, Color{255, 0, 0, 255});
+
     Graphics::swap_buffers(Input::get_display_context() == DisplayContext::GUI);
 }

@@ -5,6 +5,7 @@
 
 #include "arch/idt.h"
 #include "drivers/keyboard.h"
+#include "drivers/mouse.h"
 #include "drivers/pic.h"
 #include "gui/Compositor.h"
 #include "gui/Graphics.h"
@@ -87,6 +88,7 @@ extern "C" [[noreturn]] void _start()
     cout << "Framebuffer resolution: " << static_cast<int64_t>(fb->width) << "x" << static_cast<int64_t>(fb->height) << "\r\n";
 
     Input::initialize();
+    Mouse::initialize();
     PIC::remap(0x20, 0x28);
     PIC::enable();
     IDT::initialize();
