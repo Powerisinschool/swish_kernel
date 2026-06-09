@@ -3,6 +3,7 @@
 #include "drivers/mouse.h"
 #include "gui/Graphics.h"
 #include "subsystems/input.h"
+#include <gui/cursor.h>
 
 Compositor::Compositor(Surface *surface) {
     rootSurface = surface;
@@ -70,7 +71,19 @@ void Compositor::render() const {
     }
 
     // Draw the mouse cursor (a simple 5x5 red square) on top of everything
-    Graphics::draw_rect_filled(rootSurface, Input::get_mouse_x(), Input::get_mouse_y(), 5, 5, Color{255, 0, 0, 255});
+    // Graphics::draw_rect_filled(rootSurface, Input::get_mouse_x(), Input::get_mouse_y(), 5, 5, Color{255, 0, 0, 255});
+    const uint64_t mouseX = Input::get_mouse_x();
+    const uint64_t mouseY = Input::get_mouse_y();
+
+    for (size_t j = 0; j < 28; j++) {
+        const uint32_t row = cursor_bitmap_28[j];
+        for (size_t i = 0; i < 22; i++) {
+            if ((row >> i) & 1) {
+                // You can change Color::white to Color::black or any other color you added
+                Graphics::draw_pixel(rootSurface, mouseX + (22 - i), mouseY + j, Color::black);
+            }
+        }
+    }
 
     Graphics::swap_buffers(Input::get_display_context() == DisplayContext::GUI);
 }

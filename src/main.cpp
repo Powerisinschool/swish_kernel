@@ -46,18 +46,17 @@ extern "C" [[noreturn]] void _start()
 
     auto rootSurface = Graphics::initialize(fb);
     Graphics::set_bg(&rootSurface, Color{0, 100, 150, 255});
+
     // Create 3 overlapping windows
     // window1 will be at the bottom (Z-index 0)
     Window window1(fb->width / 8, fb->height / 8, 400, 300, Color::light_gray);
-
     // window2 will be in the middle (Z-index 1)
     Window window2(fb->width / 4, fb->height / 4, 350, 250, Color::green);
-
     // window3 will be on top (Z-index 2)
     Window window3(fb->width / 2, fb->height / 3, 300, 200, Color::yellow);
 
     Compositor compositor(&rootSurface);
-    // Add them to the compositor (order matters!)
+    // Add them to the compositor
     compositor.add_window(&window1);
     compositor.add_window(&window2);
     compositor.add_window(&window3);

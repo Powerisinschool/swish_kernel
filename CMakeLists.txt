@@ -78,6 +78,7 @@ add_executable(kernel.elf
         src/gui/Window.cpp
         include/gui/Compositor.h
         src/gui/Compositor.cpp
+        include/gui/cursor.h
 )
 
 set_target_properties(kernel.elf PROPERTIES LINKER_LANGUAGE CXX)
