@@ -16,3 +16,18 @@ bool KeyboardBuffer::pop(uint8_t &data) {
     tail = (tail + 1) % KEYBOARD_BUFFER_SIZE;
     return true;
 }
+
+bool MouseBuffer::push(const MouseEvent &event) {
+    const size_t next = (head + 1) % MOUSE_BUFFER_SIZE;
+    if (next == tail) return false;
+    buffer[head] = event;
+    head = next;
+    return true;
+}
+
+bool MouseBuffer::pop(MouseEvent &event) {
+    if (head == tail) return false;
+    event = buffer[tail];
+    tail = (tail + 1) % MOUSE_BUFFER_SIZE;
+    return true;
+}

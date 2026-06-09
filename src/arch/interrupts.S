@@ -57,6 +57,7 @@ ISR_NOERR 31
 ISR_NOERR 32 // IRQ 0: System Timer
 ISR_NOERR 33 // IRQ 1: Keyboard
 ISR_NOERR 34 // IRQ 2: PIC Cascade
+ISR_NOERR 44 // IRQ 12: Mouse
 // ... (You can define up to 255)
 
 // The Common Stub: All macros jump here

@@ -68,6 +68,17 @@ add_executable(kernel.elf
         src/utils/ring_buffer.cpp
         src/subsystems/input.cpp
         include/subsystems/input.h
+        include/gui/Graphics.h
+        src/gui/Graphics.cpp
+        src/drivers/mouse.cpp
+        include/drivers/mouse.h
+        include/gui/Font.h
+        src/gui/Font.cpp
+        include/gui/Window.h
+        src/gui/Window.cpp
+        include/gui/Compositor.h
+        src/gui/Compositor.cpp
+        include/gui/cursor.h
 )
 
 set_target_properties(kernel.elf PROPERTIES LINKER_LANGUAGE CXX)
@@ -122,7 +133,7 @@ add_custom_target(image
     COMMAND xorriso -as mkisofs -R -r -J -b limine-bios-cd.bin
             -no-emul-boot -boot-load-size 4 -boot-info-table -hfsplus
             ${CMAKE_CURRENT_BINARY_DIR}/iso_root -o ${CMAKE_CURRENT_BINARY_DIR}/kernel.iso
-    
+
     # Deploy Limine MBR to make the ISO bootable on both flash drives and CDs
     # COMMAND ${CMAKE_CURRENT_BINARY_DIR}/limine-deploy bios-install ${CMAKE_CURRENT_BINARY_DIR}/kernel.iso
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/limine-binary/limine bios-install ${CMAKE_CURRENT_BINARY_DIR}/kernel.iso

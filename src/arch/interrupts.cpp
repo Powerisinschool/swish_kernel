@@ -3,6 +3,9 @@
 #include <drivers/pic.h>
 #include <drivers/keyboard.h>
 
+#include "arch/io.h"
+#include "drivers/mouse.h"
+
 extern "C" void interrupt_handler(struct cpu_status* regs)
 {
     // A simple switch statement to route the events
@@ -29,6 +32,15 @@ extern "C" void interrupt_handler(struct cpu_status* regs)
         case 33: // Keyboard Interrupt
             Keyboard::handle_interrupt();
             PIC::send_eoi(1);
+            break;
+
+        case 44:
+            // {
+            //     uint8_t dummy = inb(0x60);
+            //     cout << "Mouse byte received: " << static_cast<int64_t>(dummy) << "\r\n";
+            // }
+            Mouse::handle_interrupt();
+            PIC::send_eoi(12);
             break;
 
         default:

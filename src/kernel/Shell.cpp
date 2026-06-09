@@ -1,18 +1,34 @@
 #include <kernel/Shell.h>
 
 #include "terminal.h"
+#include "subsystems/input.h"
 
 bool is_shell_builtin(const String& cmd) {
-    if (cmd == "help" || cmd == "clear" || cmd == "echo" || cmd == "exit") {
+    if (cmd == "help" || cmd == "clear" || cmd == "echo" || cmd == "display" || cmd == "exit") {
         return true;
     }
     return false;
 }
 
 // Forward declaration of the built-in processor
-bool process_builtin(const String& cmd, String* args, int argCount) {
+bool Shell::process_builtin(const String& cmd, String* args, int argCount) {
     if (cmd == "exit") {
         return true;
+    }
+    if (cmd == "display") {
+        Input::switch_to_gui();
+        return false;
+    }
+    if (cmd == "echo") {
+        for (int i = 1; i < argCount - 1; i++) {
+            cout << args[i] << " ";
+        }
+        cout << args[argCount - 1] << "\r\n";
+        return false;
+    }
+    if (cmd == "help") {
+        display_help();
+        return false;
     }
     cout << "[Shell built-in command `" << cmd << "`]\r\n";
     if (argCount > 1) {
@@ -22,7 +38,7 @@ bool process_builtin(const String& cmd, String* args, int argCount) {
         cout << "    - " << args[i] << "\r\n";
     }
     return false;
-};
+}
 
 Shell &Shell::getInstance() {
     static Shell instance;
@@ -76,4 +92,8 @@ bool Shell::eval_user_input(const String &rawInput) {
     cout << "Command not found or external execution not yet supported: " << cmd.c_str() << "\r\n";
 
     return false;
+}
+
+void Shell::display_help() {
+    cout << "Type a command `help` for a list of available commands.\r\n";
 }

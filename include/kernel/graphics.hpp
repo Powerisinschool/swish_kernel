@@ -3,14 +3,14 @@
 
 struct Color
 {
-    uint8_t r : 2;
-    uint8_t g : 2;
-    uint8_t b : 2;
-    uint8_t a : 2; // drop for now
+    uint32_t r : 2;
+    uint32_t g : 2;
+    uint32_t b : 2;
+    uint32_t a : 2; // drop for now
 
     [[nodiscard]] uint32_t to_uint32() const
     {
-        return (r << 16) | (g << 8) | b;
+        return (a << 24) | (r << 16) | (g << 8) | b;
     }
 };
 

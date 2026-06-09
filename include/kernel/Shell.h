@@ -22,4 +22,6 @@ public:
 
 private:
     Shell() = default;
+    static bool process_builtin(const String& cmd, String* args, int argCount);
+    static void display_help();
 };

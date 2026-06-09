@@ -4,6 +4,7 @@
 
 #include "string.h"
 #include "terminal.h"
+#include "gui/Graphics.h"
 
 #define EXTENSION_CODE 0xE0
 #define RELEASE_KEY_CODE 0x80
@@ -28,6 +29,8 @@
 // static bool is_terminal_enabled = true;
 
 static volatile bool line_ready = false;
+static volatile bool dirty = true; // Start dirty to flush any updates
+static Compositor *compositor = nullptr;
 
 static KeyState keyboard_state[256] = {};
 static bool is_extended = false;
@@ -35,6 +38,14 @@ static bool is_caps = false;
 static bool is_shift_active = false;
 static bool is_ctrl_active = false;
 static bool is_alt_active = false;
+
+static uint64_t mouseX = 0;
+static uint64_t mouseY = 0;
+
+// Track the previous state of the buttons
+static bool left_button_was_down = false;
+static bool right_button_was_down = false;
+static bool middle_button_was_down = false;
 
 static char input_buffer[LINE_BUFFER_SIZE];
 static uint16_t to_input_index = 0;
@@ -62,6 +73,7 @@ static constexpr char qwerty_upper[128] = {
 };
 
 KeyboardBuffer kbd_ring_buffer;
+MouseBuffer mouse_ring_buffer;
 
 namespace Input {
     void initialize() {
@@ -75,9 +87,20 @@ namespace Input {
             }
             keyboard_state[i].is_printable = (qwerty_lower[i] != 0);
         }
+        flush_terminal_updates();
+        dirty = true;
+    }
+
+    void set_compositor(Compositor *comp) {
+        compositor = comp;
     }
 
     void process_events() {
+        process_keyboard_events();
+        process_mouse_events();
+    }
+
+    void process_keyboard_events() {
         uint8_t scancode;
 
         while (kbd_ring_buffer.pop(scancode)) {
@@ -132,6 +155,9 @@ namespace Input {
                 continue;
             }
 
+            // All functionality below will update the buffer
+            dirty = true;
+
             if (scancode == BACKSPACE_KEY_CODE) {
                 if (active_context == DisplayContext::TERMINAL) {
                     if (to_input_index == 0) continue;
@@ -182,12 +208,47 @@ namespace Input {
         }
     }
 
+    void process_mouse_events() {
+        MouseEvent event = {};
+
+        while (mouse_ring_buffer.pop(event)) {
+            int64_t newX = static_cast<int64_t>(mouseX) + event.deltaX;
+            int64_t newY = static_cast<int64_t>(mouseY) + event.deltaY;
+
+            if (newX < 0) newX = 0;
+            if (newX >= static_cast<int64_t>(Graphics::get_width())) newX = static_cast<int64_t>(Graphics::get_width()) - 1;
+
+            if (newY < 0) newY = 0;
+            if (newY >= static_cast<int64_t>(Graphics::get_height())) newX = static_cast<int64_t>(Graphics::get_height()) - 1;
+
+            mouseX = newX;
+            mouseY = newY;
+
+            const bool left_is_down = (event.buttons & 0x01) != 0;
+            const bool right_is_down = (event.buttons & 0x02) != 0;
+            const bool middle_is_down = (event.buttons & 0x04) != 0;
+
+            if (active_context == DisplayContext::GUI && compositor != nullptr) {
+                if (left_is_down && !left_button_was_down) {
+                    compositor->inject_mouse_button(mouseX, mouseY, 0, true);
+                } else if (!left_is_down && left_button_was_down) {
+                    compositor->inject_mouse_button(mouseX, mouseY, 0, false);
+                }
+            }
+
+            left_button_was_down = left_is_down;
+            right_button_was_down = right_is_down;
+            middle_button_was_down = middle_is_down;
+        }
+    }
+
     void get_line(char *buffer, size_t max_len) {
         while (!line_ready) {
             __asm__ __volatile__("cli");
             process_events();
             // __asm__ __volatile__("hlt"); // Block the execution thread until the line is ready
             if (!line_ready) {
+                Graphics::swap_buffers(active_context == DisplayContext::GUI);
                 // sti enables interrupts, and hlt immediately waits for one.
                 // This specific sequence prevents the CPU from sleeping forever.
                 __asm__ __volatile__("sti");
@@ -198,6 +259,8 @@ namespace Input {
             }
         }
 
+        Graphics::swap_buffers(active_context == DisplayContext::GUI);
+
         size_t copy_len = to_input_index < max_len - 1 ? to_input_index : max_len - 1;
 
         memcpy(buffer, input_buffer, copy_len);
@@ -207,6 +270,32 @@ namespace Input {
         to_input_index = 0;
         input_len = 0;
         line_ready = false;
+    }
+
+    bool is_line_ready() {
+        return line_ready;
+    }
+
+    void fetch_line(char *buffer, const size_t max_len) {
+        const size_t copy_len = to_input_index < max_len - 1 ? to_input_index : max_len - 1;
+
+        memcpy(buffer, input_buffer, copy_len);
+        buffer[copy_len] = '\0';
+
+        memset(&input_buffer, 0, LINE_BUFFER_SIZE);
+        to_input_index = 0;
+        input_len = 0;
+        line_ready = false;
+    }
+
+    bool is_terminal_dirty() {
+        return dirty;
+    }
+
+    void flush_terminal_updates() {
+        if (active_context != DisplayContext::TERMINAL) return;
+        Graphics::swap_buffers(false);
+        dirty = false;
     }
 
     char determine_case(const uint8_t index) {
@@ -221,17 +310,27 @@ namespace Input {
 
     void switch_to_terminal() {
         // is_terminal_enabled = true;
+        // if (active_context == DisplayContext::TERMINAL) return;
+        // if (active_context == DisplayContext::GUI) {
+        //     char s[input_len];
+        //     memset(s, ' ', input_len);
+        //     Graphics::draw_string(10, 10, s, Graphics::get_bg());
+        // }
+
         active_context = DisplayContext::TERMINAL;
-        cout << "\r\n[Terminal Context Restored]\r\nuser@kernel:~$ ";
-        for (size_t i = 0; i < to_input_index; i++) {
-            send_to_terminal(input_buffer[i], false, false, true);
-        }
+        // cout << "\r\n[Terminal Context Restored]\r\nuser@kernel:~$ ";
+        // for (size_t i = 0; i < to_input_index; i++) {
+        //     send_to_terminal(input_buffer[i], false, false, true);
+        // }
     }
 
     void switch_to_gui() {
         // is_terminal_enabled = false;
         // cout << "\r\n";
         active_context = DisplayContext::GUI;
+        // Graphics::draw_string(10, 10, "Current input:", Color::white);
+        // Graphics::draw_string(10, 30, input_buffer, Color::white);
+        // Graphics::swap_buffers(active_context == DisplayContext::GUI);
     }
 
     void send_to_terminal(const char c, const bool should_buffer, const bool should_increment, const bool should_print) {
@@ -249,7 +348,8 @@ namespace Input {
 
     void send_to_gui(const char c) {
         // cout << "GUI is currently active\r\n";
-        (void)c;
+        if (compositor == nullptr) return;
+        compositor->inject_key(c);
     }
 
     void send_to_active_context(const char c) {
@@ -258,5 +358,17 @@ namespace Input {
         } else if (active_context == DisplayContext::GUI) {
             send_to_gui(c);
         }
+    }
+
+    DisplayContext &get_display_context() {
+        return active_context;
+    }
+
+    uint64_t get_mouse_x() {
+        return mouseX;
+    }
+
+    uint64_t get_mouse_y() {
+        return mouseY;
     }
 }

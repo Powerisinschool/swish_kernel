@@ -5,7 +5,11 @@
 
 #include "arch/idt.h"
 #include "drivers/keyboard.h"
+#include "drivers/mouse.h"
 #include "drivers/pic.h"
+#include "gui/Compositor.h"
+#include "gui/Graphics.h"
+#include "gui/Window.h"
 #include "kernel/String.hpp"
 #include "kernel/Shell.h"
 #include "subsystems/input.h"
@@ -38,10 +42,30 @@ extern "C" [[noreturn]] void _start()
     }
     struct limine_framebuffer *fb = framebuffer_request.response->framebuffers[0];
 
+    initialize_physical_memory();
+
+    auto rootSurface = Graphics::initialize(fb);
+    Graphics::set_bg(&rootSurface, Color{0, 100, 150, 255});
+
+    // Create 3 overlapping windows
+    // window1 will be at the bottom (Z-index 0)
+    Window window1(fb->width / 8, fb->height / 8, 400, 300, Color::light_gray);
+    // window2 will be in the middle (Z-index 1)
+    Window window2(fb->width / 4, fb->height / 4, 350, 250, Color::green);
+    // window3 will be on top (Z-index 2)
+    Window window3(fb->width / 2, fb->height / 3, 300, 200, Color::yellow);
+
+    Compositor compositor(&rootSurface);
+    // Add them to the compositor
+    compositor.add_window(&window1);
+    compositor.add_window(&window2);
+    compositor.add_window(&window3);
+    compositor.render();
+
     struct flanterm_context *ft_ctx = flanterm_fb_init(
         nullptr,
         nullptr,
-        static_cast<uint32_t *>(fb->address),
+        Graphics::get_terminal_buffer(),
         fb->width,
         fb->height,
         fb->pitch,
@@ -64,16 +88,17 @@ extern "C" [[noreturn]] void _start()
 
     cout.initialize(ft_ctx);
 
-    initialize_physical_memory();
     // init_heap(reinterpret_cast<uintptr_t>(&initial_heap_space), sizeof(initial_heap_space));
 
     cout << "Hello" << ' ' << "World" << " from Flanterm!\r\n";
     cout << "Framebuffer resolution: " << static_cast<int64_t>(fb->width) << "x" << static_cast<int64_t>(fb->height) << "\r\n";
 
     Input::initialize();
+    Mouse::initialize();
     PIC::remap(0x20, 0x28);
     PIC::enable();
     IDT::initialize();
+
     // __asm__ volatile ("int $12");
 
     // cout << "Welcome to the custom OS!\r\n";
@@ -85,7 +110,6 @@ extern "C" [[noreturn]] void _start()
     //     cout << "You typed: " << shell_buf << "\r\n";
     // }
 
-    char *line;
     Shell &shell = Shell::getInstance();
 
     shell.homeEnv = "/";
@@ -93,24 +117,54 @@ extern "C" [[noreturn]] void _start()
     shell.HISTORY_FILE = "/.history";
 
     constexpr size_t MAX_LINE_LEN = 1024;
-    char buffer[MAX_LINE_LEN];
 
     k_print("Kernel booted. Memory managed by Limine.\r\n\n");
 
-    while (true) {
-        cout << "user@kernel:~$ ";
-        Input::get_line(buffer, MAX_LINE_LEN);
-        String input(buffer);
-        // if (input.empty())
-        //     continue;
-        add_history(input);
+    cout << "user@kernel:~$ ";
+    // while (true) {
+    //     Input::get_line(buffer, MAX_LINE_LEN);
+    //     String input(buffer);
+    //     // if (input.empty())
+    //     //     continue;
+    //     add_history(input);
+    //
+    //     if (shell.eval_user_input(input))
+    //         break;
+    // }
+    //
 
-        if (shell.eval_user_input(input))
-            break;
+    Input::set_compositor(&compositor);
+
+    while (true) {
+        __asm__ volatile("cli");
+        Input::process_events();
+        // Mouse::process_events();
+        __asm__ volatile("sti");
+
+        if (Input::get_display_context() == DisplayContext::TERMINAL) {
+            if (Input::is_line_ready()) {
+                char buffer[MAX_LINE_LEN];
+                Input::fetch_line(buffer, MAX_LINE_LEN);
+                if (shell.eval_user_input(String(buffer)))
+                    break;
+                cout << "user@kernel:~$ ";
+
+                Input::flush_terminal_updates();
+            }
+            if (Input::is_terminal_dirty()) {
+                Input::flush_terminal_updates();
+            }
+        } else if (Input::get_display_context() == DisplayContext::GUI) {
+            compositor.render();
+        }
+
+        __asm__ volatile("hlt");
     }
 
     Keyboard::disable();
     cout << "\r\n[Process completed]\r\n";
+
+    Graphics::swap_buffers(Input::get_display_context() == DisplayContext::GUI);
 
     while (true)
     {
