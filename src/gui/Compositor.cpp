@@ -41,7 +41,7 @@ void Compositor::render() const {
     }
 
     // Draw the mouse cursor (a simple 5x5 red square) on top of everything
-    Graphics::draw_rect_filled(rootSurface, mouse_x, mouse_y, 5, 5, Color{255, 0, 0, 255});
+    Graphics::draw_rect_filled(rootSurface, Input::get_mouse_x(), Input::get_mouse_y(), 5, 5, Color{255, 0, 0, 255});
 
     Graphics::swap_buffers(Input::get_display_context() == DisplayContext::GUI);
 }

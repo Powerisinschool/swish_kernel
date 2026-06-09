@@ -39,6 +39,9 @@ static bool is_shift_active = false;
 static bool is_ctrl_active = false;
 static bool is_alt_active = false;
 
+static uint64_t mouseX = 0;
+static uint64_t mouseY = 0;
+
 static char input_buffer[LINE_BUFFER_SIZE];
 static uint16_t to_input_index = 0;
 static uint16_t input_len = 0;
@@ -87,6 +90,11 @@ namespace Input {
     }
 
     void process_events() {
+        process_keyboard_events();
+        process_mouse_events();
+    }
+
+    void process_keyboard_events() {
         uint8_t scancode;
 
         while (kbd_ring_buffer.pop(scancode)) {
@@ -191,6 +199,24 @@ namespace Input {
                     send_to_active_context(c);
                 }
             }
+        }
+    }
+
+    void process_mouse_events() {
+        MouseEvent event = {};
+
+        while (mouse_ring_buffer.pop(event)) {
+            int64_t newX = static_cast<int64_t>(mouseX) + event.deltaX;
+            int64_t newY = static_cast<int64_t>(mouseY) + event.deltaY;
+
+            if (newX < 0) newX = 0;
+            if (newX >= static_cast<int64_t>(Graphics::get_width())) newX = static_cast<int64_t>(Graphics::get_width()) - 1;
+
+            if (newY < 0) newY = 0;
+            if (newY >= static_cast<int64_t>(Graphics::get_height())) newX = static_cast<int64_t>(Graphics::get_height()) - 1;
+
+            mouseX = newX;
+            mouseY = newY;
         }
     }
 
@@ -314,5 +340,13 @@ namespace Input {
 
     DisplayContext &get_display_context() {
         return active_context;
+    }
+
+    uint64_t get_mouse_x() {
+        return mouseX;
+    }
+
+    uint64_t get_mouse_y() {
+        return mouseY;
     }
 }

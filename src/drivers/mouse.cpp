@@ -4,8 +4,7 @@
 #include "arch/io.h"
 #include "subsystems/input.h"
 
-uint64_t mouse_x = 0;
-uint64_t mouse_y = 0;
+bool mouseDown = false;
 
 static uint8_t mouse_cycle = 0;
 static uint8_t mouse_packet[3];
@@ -81,7 +80,7 @@ namespace Mouse {
             case 2:
                 mouse_packet[2] = data;
                 // This is the final byte in the 3-byte sequence
-                process_mouse_packet();
+                mouse_ring_buffer.push(process_mouse_packet());
                 mouse_cycle = 0;
                 break;
             default:
@@ -92,30 +91,19 @@ namespace Mouse {
         }
     }
 
-    void process_mouse_packet() {
-        uint16_t raw_9bit = mouse_packet[1];
+    MouseEvent process_mouse_packet() {
+        int16_t deltaX = mouse_packet[1];
         if (mouse_packet[0] & 0x10) {
-            raw_9bit |= 0x0100; // Set the 9th bit
+            deltaX -= 256;
         }
-        int64_t deltaX = static_cast<int64_t>(static_cast<uint64_t>(raw_9bit) << 55) >> 55;
 
-        raw_9bit = mouse_packet[2];
+        int16_t deltaY = mouse_packet[2];
         if (mouse_packet[0] & 0x20) {
-            raw_9bit |= 0x0100; // Set the 9th bit
+            deltaY -= 256;
         }
-        int64_t deltaY = static_cast<int64_t>(static_cast<uint64_t>(raw_9bit) << 55) >> 55;
-        deltaY = -deltaY; // Screen coordinates are positive for down, but PS/2 mouse gives in reverse
+        // Screen coordinates are positive for down, but PS/2 mouse gives in reverse
+        deltaY = static_cast<int16_t>(-deltaY);
 
-        int64_t newX = static_cast<int64_t>(mouse_x) + deltaX;
-        int64_t newY = static_cast<int64_t>(mouse_y) + deltaY;
-
-        if (newX < 0) newX = 0;
-        if (newX >= static_cast<int64_t>(Graphics::get_width())) newX = static_cast<int64_t>(Graphics::get_width()) - 1;
-
-        if (newY < 0) newY = 0;
-        if (newY >= static_cast<int64_t>(Graphics::get_height())) newX = static_cast<int64_t>(Graphics::get_height()) - 1;
-
-        mouse_x = newX;
-        mouse_y = newY;
+        return MouseEvent{deltaX, deltaY, mouse_packet[0]};
     }
 }

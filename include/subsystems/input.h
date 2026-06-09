@@ -33,6 +33,8 @@ namespace Input {
      * @brief Processes keyboard scancodes from the input queue
      */
     void process_events();
+    void process_keyboard_events();
+    void process_mouse_events();
 
     /**
      * @deprecated Prefer non-blocking
@@ -59,4 +61,6 @@ namespace Input {
     void send_to_gui(char c);
     void send_to_active_context(char c);
     DisplayContext &get_display_context();
+    uint64_t get_mouse_x();
+    uint64_t get_mouse_y();
 }
