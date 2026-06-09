@@ -12,6 +12,7 @@ struct Color {
 
     static Color white;
     static Color black;
+    static Color red;
 
     [[nodiscard]] Color withAlpha(uint8_t alpha) const;
 

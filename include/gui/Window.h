@@ -17,6 +17,10 @@ public:
      * @brief Copy the window to the screen row by row to respect the screen's pitch
      */
     void render() const;
+
+    void on_mouse_button(uint64_t local_x, uint64_t local_y, uint8_t button, bool is_down) const;
+
+    [[nodiscard]] const Surface *get_surface() const;
 private:
     char text_buffer[33] = {0};
     Surface *surface = nullptr;

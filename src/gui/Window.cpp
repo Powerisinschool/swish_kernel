@@ -27,6 +27,7 @@ void Window::inject_key(const char c) {
 }
 
 void Window::render() const {
+    Graphics::draw_bg(surface);
     Graphics::draw_string(surface, 10, 10, text_buffer, Color::black);
     for (size_t row = 0; row < surface->height; row++) {
         uint32_t *screen_row_ptr = Graphics::get_buffer_address(x, y + row);
@@ -35,4 +36,16 @@ void Window::render() const {
         const uint32_t *window_row_ptr = surface->buffer + (row * surface->width);
         memcpy(screen_row_ptr, window_row_ptr, surface->width * sizeof(uint32_t));
     }
+}
+
+void Window::on_mouse_button(uint64_t local_x, uint64_t local_y, uint8_t button, const bool is_down) const {
+    if (is_down) {
+        Graphics::set_bg(surface, Color::red);
+    } else {
+        Graphics::set_bg(surface, Color::white);
+    }
+}
+
+const Surface *Window::get_surface() const {
+    return surface;
 }

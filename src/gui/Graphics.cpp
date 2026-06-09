@@ -23,6 +23,7 @@ Color::Color(const uint32_t color) {
 
 Color Color::white = Color(255, 255, 255, 255);
 Color Color::black = Color(0, 0, 0, 255);
+Color Color::red = Color(255, 0, 0, 255);
 
 Color Color::withAlpha(const uint8_t alpha) const {
     return Color(r, g, b, alpha);

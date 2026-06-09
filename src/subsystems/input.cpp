@@ -42,6 +42,11 @@ static bool is_alt_active = false;
 static uint64_t mouseX = 0;
 static uint64_t mouseY = 0;
 
+// Track the previous state of the buttons
+static bool left_button_was_down = false;
+static bool right_button_was_down = false;
+static bool middle_button_was_down = false;
+
 static char input_buffer[LINE_BUFFER_SIZE];
 static uint16_t to_input_index = 0;
 static uint16_t input_len = 0;
@@ -68,6 +73,7 @@ static constexpr char qwerty_upper[128] = {
 };
 
 KeyboardBuffer kbd_ring_buffer;
+MouseBuffer mouse_ring_buffer;
 
 namespace Input {
     void initialize() {
@@ -217,6 +223,22 @@ namespace Input {
 
             mouseX = newX;
             mouseY = newY;
+
+            const bool left_is_down = (event.buttons & 0x01) != 0;
+            const bool right_is_down = (event.buttons & 0x02) != 0;
+            const bool middle_is_down = (event.buttons & 0x04) != 0;
+
+            if (active_context == DisplayContext::GUI && compositor != nullptr) {
+                if (left_is_down && !left_button_was_down) {
+                    compositor->inject_mouse_button(mouseX, mouseY, 0, true);
+                } else if (!left_is_down && left_button_was_down) {
+                    compositor->inject_mouse_button(mouseX, mouseY, 0, false);
+                }
+            }
+
+            left_button_was_down = left_is_down;
+            right_button_was_down = right_is_down;
+            middle_button_was_down = middle_is_down;
         }
     }
 
