@@ -75,7 +75,7 @@ void Compositor::render() const {
     Graphics::swap_buffers(Input::get_display_context() == DisplayContext::GUI);
 }
 
-void Compositor::inject_mouse_button(uint64_t x, uint64_t y, uint8_t button, bool is_down) {
+void Compositor::inject_mouse_button(const uint64_t x, const uint64_t y, const uint8_t button, const bool is_down) {
     const CompositorWindow *curr = tail;
 
     while (curr != nullptr) {
@@ -86,8 +86,8 @@ void Compositor::inject_mouse_button(uint64_t x, uint64_t y, uint8_t button, boo
                 focus_window(win);
             }
 
-            uint64_t local_x = x - win->x;
-            uint64_t local_y = y - win->y;
+            const uint64_t local_x = x - win->x;
+            const uint64_t local_y = y - win->y;
 
             win->on_mouse_button(local_x, local_y, button, is_down);
 
