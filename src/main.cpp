@@ -46,14 +46,21 @@ extern "C" [[noreturn]] void _start()
 
     auto rootSurface = Graphics::initialize(fb);
     Graphics::set_bg(&rootSurface, Color{0, 100, 150, 255});
-    // Graphics::draw_rect_filled(fb->width/4, fb->height/4, fb->width/2, fb->height/2, Color{0xFF0000FF});
-    // Graphics::draw_rect_filled(0, 0, fb->width, fb->height, Graphics::get_bg()); // Blue desktop
-    // Graphics::draw_string(100, 100, "ABC", Color{255, 255, 255, 255}); // White text
-    // Graphics::swap_buffers(true);
+    // Create 3 overlapping windows
+    // window1 will be at the bottom (Z-index 0)
+    Window window1(fb->width / 8, fb->height / 8, 400, 300, Color::light_gray);
 
-    Window window1(fb->width / 6, fb->height / 6, (4 * fb->width) / 6, (4 * fb->height) / 6);
+    // window2 will be in the middle (Z-index 1)
+    Window window2(fb->width / 4, fb->height / 4, 350, 250, Color::green);
+
+    // window3 will be on top (Z-index 2)
+    Window window3(fb->width / 2, fb->height / 3, 300, 200, Color::yellow);
+
     Compositor compositor(&rootSurface);
+    // Add them to the compositor (order matters!)
     compositor.add_window(&window1);
+    compositor.add_window(&window2);
+    compositor.add_window(&window3);
     compositor.render();
 
     struct flanterm_context *ft_ctx = flanterm_fb_init(

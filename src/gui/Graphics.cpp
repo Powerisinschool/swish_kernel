@@ -21,9 +21,17 @@ Color::Color(const uint32_t color) {
     a = (color >> 24) & 0xFF;
 }
 
-Color Color::white = Color(255, 255, 255, 255);
-Color Color::black = Color(0, 0, 0, 255);
-Color Color::red = Color(255, 0, 0, 255);
+Color Color::white      = Color(255, 255, 255, 255);
+Color Color::black      = Color(0, 0, 0, 255);
+Color Color::red        = Color(255, 0, 0, 255);
+Color Color::green      = Color(0, 255, 0, 255);
+Color Color::blue       = Color(0, 0, 255, 255);
+Color Color::yellow     = Color(255, 255, 0, 255);
+Color Color::cyan       = Color(0, 255, 255, 255);
+Color Color::magenta    = Color(255, 0, 255, 255);
+Color Color::gray       = Color(128, 128, 128, 255);
+Color Color::light_gray = Color(192, 192, 192, 255);
+Color Color::dark_gray  = Color(64, 64, 64, 255);
 
 Color Color::withAlpha(const uint8_t alpha) const {
     return Color(r, g, b, alpha);

@@ -25,6 +25,35 @@ void Compositor::add_window(Window *window) {
     }
 }
 
+void Compositor::focus_window(const Window *window) {
+    if (head == nullptr || tail == nullptr || window == nullptr) return;
+
+    // 1. Find the CompositorWindow node for this window
+    CompositorWindow *current = head;
+    while (current != nullptr) {
+        if (current->window == window) break;
+        current = current->next;
+    }
+
+    // If the window isn't managed by us, or it is already on top, do nothing
+    if (current == nullptr || current == tail) return;
+
+    // 2. Detach 'current' from its current position
+    if (current == head) {
+        head = current->next;
+        if (head != nullptr) head->prev = nullptr;
+    } else {
+        current->prev->next = current->next;
+        if (current->next != nullptr) current->next->prev = current->prev;
+    }
+
+    // 3. Reattach 'current' at the tail (making it the top-most window)
+    current->prev = tail;
+    current->next = nullptr;
+    tail->next = current;
+    tail = current;
+}
+
 void Compositor::inject_key(const char c) const {
     if (tail == nullptr) return;
     tail->window->inject_key(c);
@@ -46,13 +75,17 @@ void Compositor::render() const {
     Graphics::swap_buffers(Input::get_display_context() == DisplayContext::GUI);
 }
 
-void Compositor::inject_mouse_button(uint64_t x, uint64_t y, uint8_t button, bool is_down) const {
+void Compositor::inject_mouse_button(uint64_t x, uint64_t y, uint8_t button, bool is_down) {
     const CompositorWindow *curr = tail;
 
     while (curr != nullptr) {
-        if (const Window *win = curr->window;
+        if (Window *win = curr->window;
             x >= win->x && x <= (win->x + win->get_surface()->width)
             && y >= win->y && y <= (win->y + win->get_surface()->height)) {
+            if (is_down) {
+                focus_window(win);
+            }
+
             uint64_t local_x = x - win->x;
             uint64_t local_y = y - win->y;
 

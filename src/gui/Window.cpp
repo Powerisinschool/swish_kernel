@@ -3,13 +3,14 @@
 #include "string.h"
 #include "kernel/memory.hpp"
 
-Window::Window(const size_t x, const size_t y, const size_t width, const size_t height) : x(x),
+Window::Window(const size_t x, const size_t y, const size_t width, const size_t height, const Color bg_color) : x(x),
     y(y) {
     const auto pixel_buffer = static_cast<uint32_t *>(kmalloc(width * height * sizeof(uint32_t)));
-    surface = new Surface{pixel_buffer, width, height, width * sizeof(uint32_t), Color::white};
+    surface = new Surface{pixel_buffer, width, height, width * sizeof(uint32_t), bg_color};
 
+    const auto bg_bytes = bg_color.get_bytes();
     for (size_t i = 0; i < width * height; i++) {
-        pixel_buffer[i] = Color::white.get_bytes();
+        pixel_buffer[i] = bg_bytes;
     }
 }
 
@@ -38,11 +39,12 @@ void Window::render() const {
     }
 }
 
-void Window::on_mouse_button(uint64_t local_x, uint64_t local_y, uint8_t button, const bool is_down) const {
+void Window::on_mouse_button(uint64_t local_x, uint64_t local_y, uint8_t button, const bool is_down) {
     if (is_down) {
+        temp_bg = surface->background;
         Graphics::set_bg(surface, Color::red);
     } else {
-        Graphics::set_bg(surface, Color::white);
+        Graphics::set_bg(surface, temp_bg);
     }
 }
 

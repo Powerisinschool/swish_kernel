@@ -13,6 +13,14 @@ struct Color {
     static Color white;
     static Color black;
     static Color red;
+    static Color green;
+    static Color blue;
+    static Color yellow;
+    static Color cyan;
+    static Color magenta;
+    static Color gray;
+    static Color light_gray;
+    static Color dark_gray;
 
     [[nodiscard]] Color withAlpha(uint8_t alpha) const;
 
