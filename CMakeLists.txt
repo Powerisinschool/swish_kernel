@@ -68,6 +68,14 @@ if(ARCH STREQUAL "x86_64")
     )
 elseif(ARCH STREQUAL "aarch64")
     # Future AArch64 configuration will go here
+    list(APPEND ARCH_SRCS
+            src/arch/aarch64/interrupts.S
+            src/arch/aarch64/interrupts.cpp
+    )
+
+    list(APPEND ARCH_HEADERS
+            include/arch/aarch64/interrupts.h
+    )
 endif()
 
 add_compile_options(${COMMON_FLAGS} ${ARCH_FLAGS})

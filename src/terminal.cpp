@@ -41,6 +41,34 @@ Terminal &Terminal::operator<<(char c)
     return *this;
 }
 
+Terminal &Terminal::operator<<(uint64_t num)
+{
+    if (num == 0)
+    {
+        *this << '0';
+        return *this;
+    }
+
+    char buffer[20]; // Large enough for a 64-bit integer
+    int index = 0;
+
+    // Extract digits one by one (this grabs them backwards)
+    while (num > 0)
+    {
+        buffer[index++] = static_cast<char>('0' + static_cast<char>(num % 10));
+        num /= 10;
+    }
+
+    // Print the buffer in reverse order to correct it
+    while (index > 0)
+    {
+        index--;
+        *this << buffer[index];
+    }
+
+    return *this;
+}
+
 Terminal &Terminal::operator<<(int64_t num)
 {
     if (num == 0)
@@ -61,7 +89,7 @@ Terminal &Terminal::operator<<(int64_t num)
     // Extract digits one by one (this grabs them backwards)
     while (num > 0)
     {
-        buffer[index++] = '0' + (num % 10);
+        buffer[index++] = static_cast<char>('0' + static_cast<char>(num % 10));
         num /= 10;
     }
 

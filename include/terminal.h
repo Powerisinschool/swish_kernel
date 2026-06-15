@@ -12,6 +12,7 @@ public:
     Terminal &operator<<(const char *str);
     Terminal &operator<<(const String &str);
     Terminal &operator<<(char c);
+    Terminal &operator<<(uint64_t num);
     Terminal &operator<<(int64_t num);
 private:
     struct flanterm_context *ctx;

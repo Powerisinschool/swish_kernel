@@ -4,10 +4,8 @@
 #include <terminal.h>
 
 #include "arch/hal/cpu.h"
-#include "arch/x86_64/idt.h"
 #include "drivers/keyboard.h"
 #include "drivers/mouse.h"
-#include "drivers/pic.h"
 #include "gui/Compositor.h"
 #include "gui/Graphics.h"
 #include "gui/Window.h"
@@ -96,9 +94,7 @@ extern "C" [[noreturn]] void _start()
 
     Input::initialize();
     Mouse::initialize();
-    PIC::remap(0x20, 0x28);
-    PIC::enable();
-    IDT::initialize();
+    arch_initialize();
 
     // __asm__ volatile ("int $12");
 
@@ -137,10 +133,11 @@ extern "C" [[noreturn]] void _start()
     Input::set_compositor(&compositor);
 
     while (true) {
-        __asm__ volatile("cli");
+        // __asm__ volatile("cli");
+        arch_disable_interrupts();
         Input::process_events();
-        // Mouse::process_events();
-        __asm__ volatile("sti");
+        // __asm__ volatile("sti");
+        arch_enable_interrupts();
 
         if (Input::get_display_context() == DisplayContext::TERMINAL) {
             if (Input::is_line_ready()) {

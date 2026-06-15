@@ -18,4 +18,4 @@ struct KERNEL_PACKED cpu_status {
 };
 
 // This is the single C++ function all interrupts will funnel into
-extern "C" void interrupt_handler(struct cpu_status* regs);
+extern "C" void interrupt_handler(const struct cpu_status* regs);

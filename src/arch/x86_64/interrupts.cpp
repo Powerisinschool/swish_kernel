@@ -7,7 +7,7 @@
 #include "arch/x86_64/io.h"
 #include "drivers/mouse.h"
 
-extern "C" void interrupt_handler(struct cpu_status* regs)
+extern "C" void interrupt_handler(const cpu_status* regs)
 {
     // A simple switch statement to route the events
     switch (regs->int_no)
