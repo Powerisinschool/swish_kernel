@@ -1,8 +1,7 @@
-//
-// Created by Tolulope Olagunju on 15/06/2026.
-//
+#pragma once
 
-#ifndef BAREMETALKERNEL_CPU_H
-#define BAREMETALKERNEL_CPU_H
+void arch_initialize();
+void arch_enable_interrupts();
+void arch_disable_interrupts();
+void arch_halt_cpu();
 
-#endif //BAREMETALKERNEL_CPU_H

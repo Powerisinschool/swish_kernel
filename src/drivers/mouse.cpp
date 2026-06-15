@@ -1,7 +1,7 @@
 #include <drivers/mouse.h>
 
 #include "terminal.h"
-#include "arch/io.h"
+#include "arch/x86_64/io.h"
 #include "subsystems/input.h"
 
 bool mouseDown = false;

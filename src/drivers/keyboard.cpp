@@ -1,5 +1,5 @@
 #include <drivers/keyboard.h>
-#include <arch/io.h>
+#include <arch/x86_64/io.h>
 #include <string.h>
 
 #include <utils/ring_buffer.h>

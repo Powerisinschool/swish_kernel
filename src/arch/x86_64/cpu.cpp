@@ -1,3 +1,5 @@
-//
-// Created by Tolulope Olagunju on 15/06/2026.
-//
+#include <arch/cpu.h>
+
+void arch_halt_cpu() {
+    __asm__ __volatile__("hlt");
+}

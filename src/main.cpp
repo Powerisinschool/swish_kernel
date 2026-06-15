@@ -3,7 +3,8 @@
 #include <compiler.h>
 #include <terminal.h>
 
-#include "arch/idt.h"
+#include "arch/cpu.h"
+#include "arch/x86_64/idt.h"
 #include "drivers/keyboard.h"
 #include "drivers/mouse.h"
 #include "drivers/pic.h"
@@ -37,7 +38,7 @@ extern "C" [[noreturn]] void _start()
         // Halting immediately prevents a crash if the bootloader failed
         while (true)
         {
-            __asm__ volatile("hlt");
+            arch_halt_cpu();
         }
     }
     struct limine_framebuffer *fb = framebuffer_request.response->framebuffers[0];
@@ -158,7 +159,8 @@ extern "C" [[noreturn]] void _start()
             compositor.render();
         }
 
-        __asm__ volatile("hlt");
+        // arch_halt_cpu();
+        arch_halt_cpu();
     }
 
     Keyboard::disable();
@@ -168,6 +170,6 @@ extern "C" [[noreturn]] void _start()
 
     while (true)
     {
-        __asm__ volatile("hlt");
+        arch_halt_cpu();
     }
 }
