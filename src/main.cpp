@@ -3,7 +3,7 @@
 #include <compiler.h>
 #include <terminal.h>
 
-#include "arch/cpu.h"
+#include "arch/hal/cpu.h"
 #include "arch/x86_64/idt.h"
 #include "drivers/keyboard.h"
 #include "drivers/mouse.h"

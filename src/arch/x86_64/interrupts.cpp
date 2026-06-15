@@ -3,7 +3,7 @@
 #include <drivers/pic.h>
 #include <drivers/keyboard.h>
 
-#include "arch/cpu.h"
+#include "arch/hal/cpu.h"
 #include "arch/x86_64/io.h"
 #include "drivers/mouse.h"
 
