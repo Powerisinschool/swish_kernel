@@ -7,6 +7,9 @@ set(CMAKE_SYSTEM_PROCESSOR x86_64)
 # Tell CMake not to look for standard system libraries or compiler runtimes
 set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
 
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 project(BareMetalKernel C CXX ASM)
 
 # Define the Clang cross-compilation flags
@@ -42,6 +45,21 @@ add_executable(kernel.elf
                 src/arch/idt.cpp
                 src/drivers/pic.cpp
                 src/drivers/keyboard.cpp
+                src/arch/interrupts.cpp
+                src/arch/interrupts.S
+                src/kernel/String.cpp
+                src/kernel/Shell.cpp
+                src/kernel/cxxabi.cpp
+                src/kernel/memory_operators.cpp
+                src/kernel/memory.cpp
+                src/utils/ring_buffer.cpp
+                src/subsystems/input.cpp
+                src/gui/Graphics.cpp
+                src/drivers/mouse.cpp
+                src/gui/Font.cpp
+                src/gui/Window.cpp
+                src/gui/Compositor.cpp
+                src/libc/memmove.cpp
 
                 # Explicitly listing headers helps CLion's code insight
                 include/limine.h
@@ -52,34 +70,19 @@ add_executable(kernel.elf
                 include/arch/io.h
                 include/drivers/keyboard.h
                 include/drivers/pic.h
-        include/compiler.h
-        include/arch/interrupts.h
-        src/arch/interrupts.cpp
-        src/arch/interrupts.S
-        include/kernel/shell.h
-        include/kernel/String.hpp
-        src/kernel/String.cpp
-        src/kernel/Shell.cpp
-        src/kernel/cxxabi.cpp
-        src/kernel/memory_operators.cpp
-        include/kernel/memory.hpp
-        src/kernel/memory.cpp
-        include/utils/ring_buffer.h
-        src/utils/ring_buffer.cpp
-        src/subsystems/input.cpp
-        include/subsystems/input.h
-        include/gui/Graphics.h
-        src/gui/Graphics.cpp
-        src/drivers/mouse.cpp
-        include/drivers/mouse.h
-        include/gui/Font.h
-        src/gui/Font.cpp
-        include/gui/Window.h
-        src/gui/Window.cpp
-        include/gui/Compositor.h
-        src/gui/Compositor.cpp
-        include/gui/cursor.h
-        src/libc/memmove.cpp
+                include/compiler.h
+                include/arch/interrupts.h
+                include/kernel/shell.h
+                include/kernel/String.hpp
+                include/kernel/memory.hpp
+                include/utils/ring_buffer.h
+                include/subsystems/input.h
+                include/gui/Graphics.h
+                include/drivers/mouse.h
+                include/gui/Font.h
+                include/gui/Window.h
+                include/gui/Compositor.h
+                include/gui/cursor.h
 )
 
 set_target_properties(kernel.elf PROPERTIES LINKER_LANGUAGE CXX)

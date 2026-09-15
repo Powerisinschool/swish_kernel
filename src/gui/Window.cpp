@@ -3,7 +3,7 @@
 #include "string.h"
 #include "kernel/memory.hpp"
 
-Window::Window(const size_t x, const size_t y, const size_t width, const size_t height, const Color bg_color) : loc(x, y), cursor(0, 0)
+Window::Window(const size_t x, const size_t y, const size_t width, const size_t height, const Color bg_color) : loc(x, y)
 {
     const auto pixel_buffer = static_cast<uint32_t *>(kmalloc(width * height * sizeof(uint32_t)));
     surface = new Surface{pixel_buffer, width, height, width * sizeof(uint32_t), bg_color};
@@ -59,14 +59,14 @@ void Window::scroll_forward() {
     }
 }
 
-void Window::render(bool focused) const {
+void Window::render(const bool focused) const {
     Graphics::draw_bg(surface);
-    // Graphics::draw_string(surface, 10, 10, text_buffer, Color::black);
+
     const size_t fw = Graphics::get_font_width();
     const size_t fh = Graphics::get_font_height();
 
     // Draw the cursor to screen
-    if (focused) Graphics::draw_rect_filled(surface, cursor.x * fw, cursor.y * fh, fw, fh, Color::gray);
+    if (focused && !is_dragging) Graphics::draw_rect_filled(surface, cursor.x * fw, cursor.y * fh, fw, fh, Color::gray);
 
     for (size_t row = 0; row < rows; row++) {
         for (size_t col = 0; col < cols; col++) {
@@ -76,6 +76,7 @@ void Window::render(bool focused) const {
             Graphics::draw_char(surface, col * fw, row * fh, c, Color::black);
         }
     }
+
     for (size_t row = 0; row < surface->height; row++) {
         uint32_t *screen_row_ptr = Graphics::get_buffer_address(loc.x, loc.y + row);
         if (!screen_row_ptr) continue;
@@ -85,15 +86,30 @@ void Window::render(bool focused) const {
     }
 }
 
-void Window::on_mouse_button(uint64_t local_x, uint64_t local_y, uint8_t button, const bool is_down) {
+void Window::on_mouse_button(const uint64_t local_x, const uint64_t local_y, uint8_t button, const bool is_down) {
     if (is_down) {
         temp_bg = surface->background;
         Graphics::set_bg(surface, Color::red);
+
+        is_dragging = true;
+        drag_offset = Coordinate{local_x, local_y};
     } else {
         Graphics::set_bg(surface, temp_bg);
+
+        is_dragging = false;
+        drag_offset = Coordinate{0, 0};
     }
+}
+
+void Window::on_mouse_move(const uint64_t global_x, const uint64_t global_y) {
+    if (!is_dragging) return;
+    loc = Coordinate{global_x, global_y} - drag_offset;
 }
 
 const Surface *Window::get_surface() const {
     return surface;
+}
+
+Coordinate Coordinate::operator-(const Coordinate &coordinate) const {
+    return Coordinate{x - coordinate.x, y - coordinate.y};
 }

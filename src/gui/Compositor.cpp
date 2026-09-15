@@ -110,3 +110,8 @@ void Compositor::inject_mouse_button(const uint64_t x, const uint64_t y, const u
         curr = curr->prev;
     }
 }
+
+void Compositor::inject_mouse_move(const uint64_t x, const uint64_t y) const {
+    if (tail == nullptr) return;
+    tail->window->on_mouse_move(x, y);
+}
