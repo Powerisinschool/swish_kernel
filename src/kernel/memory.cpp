@@ -72,7 +72,7 @@ static inline size_t align_8(size_t size) {
     return (size + 7) & ~7;
 }
 
-void init_heap(uintptr_t heap_start, size_t heap_size) {
+void init_heap(const uintptr_t heap_start, const size_t heap_size) {
     // We need at least enough room for one header
     if (heap_size < sizeof(MemoryBlock)) return;
 
@@ -85,10 +85,10 @@ void init_heap(uintptr_t heap_start, size_t heap_size) {
     free_list_head->next = nullptr;
 }
 
-extern "C" void* kmalloc(size_t size) {
+extern "C" void* kmalloc(const size_t size) {
     if (size == 0) return nullptr;
 
-    size_t aligned_size = align_8(size);
+    const size_t aligned_size = align_8(size);
     MemoryBlock* current = free_list_head;
 
     // Traverse the linked list looking for a free block that is big enough

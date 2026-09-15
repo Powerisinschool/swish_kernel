@@ -79,6 +79,7 @@ add_executable(kernel.elf
         include/gui/Compositor.h
         src/gui/Compositor.cpp
         include/gui/cursor.h
+        src/libc/memmove.cpp
 )
 
 set_target_properties(kernel.elf PROPERTIES LINKER_LANGUAGE CXX)
