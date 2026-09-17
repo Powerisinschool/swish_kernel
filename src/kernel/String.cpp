@@ -61,7 +61,7 @@ String::reference String::at(size_t index) {
     return data[index];
 }
 String::reference String::front() { return data[0]; }
-String::reference String::back() { return data[length - 1]; }
+String::reference String::back() { return data[length ? (length - 1) : 0]; }
 String::const_reference String::operator[](size_t index) const { return data[index]; }
 String::const_reference String::at(size_t index) const {
     if (index >= length) return data[0];
