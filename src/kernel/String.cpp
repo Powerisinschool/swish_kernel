@@ -38,7 +38,6 @@ String &String::operator=(const String& other) {
     return *this;
 }
 
-// Add to String.hpp public methods
 bool String::operator==(const char* other) const {
     if (!data || !other) return false;
     size_t i = 0;
@@ -56,3 +55,17 @@ String::iterator String::begin() { return data; }
 String::iterator String::end() { return data + length; }
 String::const_iterator String::begin() const { return data; }
 String::const_iterator String::end() const { return data + length; }
+String::reference String::operator[](size_t index) { return data[index]; }
+String::reference String::at(size_t index) {
+    if (index >= length) return data[length]; // safe: always the null terminator
+    return data[index];
+}
+String::reference String::front() { return data[0]; }
+String::reference String::back() { return data[length ? (length - 1) : 0]; }
+String::const_reference String::operator[](size_t index) const { return data[index]; }
+String::const_reference String::at(size_t index) const {
+    if (index >= length) return data[0];
+    return data[index];
+}
+String::const_reference String::front() const { return data[0]; }
+String::const_reference String::back() const { return data[length - 1]; }

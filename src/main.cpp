@@ -51,25 +51,28 @@ extern "C" [[noreturn]] void _start()
 
     // Create 3 overlapping windows
     // window1 will be at the bottom (Z-index 0)
-    Window window1(fb->width / 8, fb->height / 8, 400, 300, Color::light_gray);
+    auto *window1 = new  Window(fb->width / 8, fb->height / 8, 400, 300, Color::light_gray);
+    window1->set_title("Window 1");
     // window2 will be in the middle (Z-index 1)
-    Window window2(fb->width / 4, fb->height / 4, 350, 250, Color::green);
+    auto *window2 = new Window(fb->width / 4, fb->height / 4, 350, 250, Color::green);
+    window2->set_title("Window 2");
     // window3 will be on top (Z-index 2)
-    Window window3(fb->width / 2, fb->height / 3, 300, 200, Color::yellow);
+    auto *window3 = new Window(fb->width / 2, fb->height / 3, 300, 200, Color::yellow);
+    window3->set_title("Window 3");
     // window4 will be on top (Z-index 3)
     const size_t win4X_cell = 8;
     const size_t win4y_cell = 7;
     size_t win4X = fb->width / win4X_cell;
     size_t win4y = fb->height / win4y_cell;
-    TerminalWindow window4(win4X, win4y, win4X * (win4X_cell - 2), win4y * (win4y_cell - 2), "window4> ");
+    auto *window4 = new TerminalWindow(win4X, win4y, win4X * (win4X_cell - 2), win4y * (win4y_cell - 2), "window4> ");
+    window4->set_title("Terminal");
 
     Compositor compositor(&rootSurface);
     // Add them to the compositor
-    compositor.add_window(&window1);
-    compositor.add_window(&window2);
-    compositor.add_window(&window3);
-    compositor.add_window(&window3);
-    compositor.add_window(&window4);
+    compositor.add_window(window1);
+    compositor.add_window(window2);
+    compositor.add_window(window3);
+    compositor.add_window(window4);
     compositor.render();
 
     flanterm_context *ft_ctx = flanterm_fb_init(
