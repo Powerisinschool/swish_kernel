@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 #include "Graphics.h"
+#include "kernel/String.hpp"
 
 struct Coordinate {
     size_t x, y;
@@ -15,13 +16,16 @@ struct Coordinate {
 
 class Window {
 public:
-    virtual ~Window() = default;
+    bool should_close = false;
+
+    virtual ~Window();
 
     Coordinate loc;
     Color temp_bg;
 
     explicit Window(size_t x, size_t y, size_t width, size_t height, Color bg_color = Color::white);
 
+    void set_title(const char *title_string);
     virtual void inject_key(char c);
     void scroll_forward();
     void scroll_backward();
@@ -36,6 +40,7 @@ public:
 
     [[nodiscard]] const Surface *get_surface() const;
 protected:
+    String title;
     char *text_grid = nullptr;
     size_t cols, rows;
     Coordinate cursor{0, 0};

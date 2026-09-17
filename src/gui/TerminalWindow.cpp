@@ -13,7 +13,10 @@ void TerminalWindow::inject_key(const char c) {
         command_buffer[cols - prompt_len] = '\0';
         Window::inject_key('\n'); // move the cursor
         // process the command
-        Shell::getInstance().eval_user_input(command_buffer, this);
+        if (Shell::getInstance().eval_user_input(command_buffer, this)) {
+            should_close = true;
+            return;
+        }
         print(prompt);
         return;
     }

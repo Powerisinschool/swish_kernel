@@ -55,12 +55,44 @@ void Compositor::focus_window(const Window *window) {
     tail = current;
 }
 
+void Compositor::delete_window(CompositorWindow *win) {
+    if (win == nullptr) return;
+    if (head == win) {
+        head = win->next;
+        if (head != nullptr) head->prev = nullptr;
+    }
+    if (tail == win) {
+        tail = win->prev;
+        if (tail != nullptr) tail->next = nullptr;
+    }
+    if (win->next != nullptr) {
+        win->next->prev = win->prev;
+    }
+    if (win->prev != nullptr) {
+        win->prev->next = win->next;
+    }
+    delete win->window;
+    delete win;
+}
+
+void Compositor::cleanup_closed_windows() {
+    CompositorWindow *current = head;
+
+    while (current != nullptr) {
+        CompositorWindow *next_node = current->next;
+        if (current->window->should_close) {
+            delete_window(current);
+        }
+        current = next_node;
+    }
+}
+
 void Compositor::inject_key(const char c) const {
     if (tail == nullptr) return;
     tail->window->inject_key(c);
 }
 
-void Compositor::render() const {
+void Compositor::render() {
     Graphics::draw_bg(rootSurface);
 
     // Draw all windows
@@ -86,6 +118,7 @@ void Compositor::render() const {
     }
 
     Graphics::swap_buffers(Input::get_display_context() == DisplayContext::GUI);
+    cleanup_closed_windows();
 }
 
 void Compositor::inject_mouse_button(const uint64_t x, const uint64_t y, const uint8_t button, const bool is_down) {

@@ -104,13 +104,9 @@ namespace Graphics {
             for (uint32_t cy = 0; cy < 8; cy++) {
                 if (top_byte & (1 << cy)) {
                     draw_pixel(dest, x + cx, y + cy, color);
-                } else {
-                    draw_pixel(dest, x + cx, y + cy, dest->background);
                 }
                 if (bottom_byte & (1 << cy)) {
                     draw_pixel(dest, x + cx, y + cy + 8, color);
-                } else {
-                    draw_pixel(dest, x + cx, y + cy + 8, dest->background);
                 }
             }
         }

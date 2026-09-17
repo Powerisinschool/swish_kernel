@@ -14,9 +14,19 @@ Window::Window(const size_t x, const size_t y, const size_t width, const size_t 
     }
 
     cols = width / Graphics::get_font_width();
-    rows = height / Graphics::get_font_height();
+    rows = height / Graphics::get_font_height() - 1;
     text_grid = static_cast<char *>(kmalloc(cols * rows));
     memset(text_grid, 0, cols * rows);
+}
+
+Window::~Window() {
+    kfree(surface->buffer);
+    delete surface;
+    kfree(text_grid);
+}
+
+void Window::set_title(const char *title_string) {
+    title = title_string;
 }
 
 void Window::inject_key(const char c) {
@@ -66,16 +76,27 @@ void Window::render(const bool focused) const {
     const size_t fh = Graphics::get_font_height();
 
     // Draw the cursor to screen
-    if (focused && !is_dragging) Graphics::draw_rect_filled(surface, cursor.x * fw, cursor.y * fh, fw, fh, Color::gray);
+    if (focused && !is_dragging) Graphics::draw_rect_filled(surface, cursor.x * fw, (cursor.y + 1) * fh, fw, fh, Color::gray);
 
     for (size_t row = 0; row < rows; row++) {
         for (size_t col = 0; col < cols; col++) {
             const char c = text_grid[row * cols + col];
             if (c == '\0') break; // skip the current row
             if (c == ' ') continue; // skip the current cell
-            Graphics::draw_char(surface, col * fw, row * fh, c, Color::black);
+            Graphics::draw_char(surface, col * fw, (row + 1) * fh, c, Color::black);
         }
     }
+
+    // Draw the close button
+    // Graphics::draw_rect_filled(surface, 0, 16, surface->width, 2, Color::black);
+    Graphics::draw_rect_filled(surface, 0, 0, surface->width, fh, Color::dark_gray);
+    const size_t text_width = title.len()* fw;
+    const size_t title_x = (surface->width - text_width) / 2;
+    // for (size_t i = 0; i < title.len(); i++) {
+    //     Graphics::draw_char(surface, title_x + (i * fw), 0, title[i], Color::white);
+    // }
+    Graphics::draw_string(surface, title_x, 0, title.c_str(), Color::white);
+    Graphics::draw_rect_filled(surface, surface->width - fh, 0, fh, fh, Color::red);
 
     for (size_t row = 0; row < surface->height; row++) {
         uint32_t *screen_row_ptr = Graphics::get_buffer_address(loc.x, loc.y + row);
@@ -88,13 +109,20 @@ void Window::render(const bool focused) const {
 
 void Window::on_mouse_button(const uint64_t local_x, const uint64_t local_y, uint8_t button, const bool is_down) {
     if (is_down) {
-        temp_bg = surface->background;
-        Graphics::set_bg(surface, Color::red);
+        const size_t fh = Graphics::get_font_height();
+        if (local_x >= (surface->width - fh) && local_y <= fh) {
+            should_close = true;
+            return;
+        }
 
-        is_dragging = true;
-        drag_offset = Coordinate{local_x, local_y};
+        if (local_y <= 18) {
+            // temp_bg = surface->background;
+            // Graphics::set_bg(surface, Color::red);
+            is_dragging = true;
+            drag_offset = Coordinate{local_x, local_y};
+        }
     } else {
-        Graphics::set_bg(surface, temp_bg);
+        // Graphics::set_bg(surface, temp_bg);
 
         is_dragging = false;
         drag_offset = Coordinate{0, 0};
