@@ -113,7 +113,7 @@ void Window::render(const bool focused) const {
 void Window::on_mouse_button(const uint64_t local_x, const uint64_t local_y, uint8_t button, const bool is_down) {
     if (is_down) {
         const size_t fh = Graphics::get_font_height();
-        if (local_x >= (surface->width - fh) && local_y <= fh) {
+if (local_x < surface->width && local_x >= (surface->width - fh) && local_y < fh) {
             should_close = true;
             return;
         }
