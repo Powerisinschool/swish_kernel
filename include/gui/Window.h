@@ -15,12 +15,14 @@ struct Coordinate {
 
 class Window {
 public:
+    virtual ~Window() = default;
+
     Coordinate loc;
     Color temp_bg;
 
     explicit Window(size_t x, size_t y, size_t width, size_t height, Color bg_color = Color::white);
 
-    void inject_key(char c);
+    virtual void inject_key(char c);
     void scroll_forward();
     void scroll_backward();
 
@@ -33,7 +35,7 @@ public:
     void on_mouse_move(uint64_t global_x, uint64_t global_y);
 
     [[nodiscard]] const Surface *get_surface() const;
-private:
+protected:
     char *text_grid = nullptr;
     size_t cols, rows;
     Coordinate cursor{0, 0};

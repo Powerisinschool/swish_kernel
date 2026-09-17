@@ -88,7 +88,7 @@ bool Shell::eval_user_input(const String &rawInput) {
     {
         return process_builtin(cmd, args, argCount);
     }
-    // Replace with your terminal output mechanism
+    // Replace with your terminal output mechanism (TODO: GUI)
     cout << "Command not found or external execution not yet supported: " << cmd.c_str() << "\r\n";
 
     return false;
