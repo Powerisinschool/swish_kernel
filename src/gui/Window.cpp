@@ -90,13 +90,13 @@ void Window::render(const bool focused) const {
     // Draw the close button
     // Graphics::draw_rect_filled(surface, 0, 16, surface->width, 2, Color::black);
     Graphics::draw_rect_filled(surface, 0, 0, surface->width, fh, Color::dark_gray);
-    const size_t text_width = title.len()* fw;
-    const size_t title_x = (surface->width - text_width) / 2;
-    // for (size_t i = 0; i < title.len(); i++) {
-    //     Graphics::draw_char(surface, title_x + (i * fw), 0, title[i], Color::white);
-    // }
-    Graphics::draw_string(surface, title_x, 0, title.c_str(), Color::white);
-    Graphics::draw_rect_filled(surface, surface->width - fh, 0, fh, fh, Color::red);
+const size_t text_width = title.len() * fw;
+size_t title_x = 0;
+if (surface->width > text_width) {
+    title_x = (surface->width - text_width) / 2;
+}
+Graphics::draw_string(surface, static_cast<uint32_t>(title_x), 0, title.c_str(), Color::white);
+Graphics::draw_rect_filled(surface, surface->width - fh, 0, fh, fh, Color::red);
 
     for (size_t row = 0; row < surface->height; row++) {
         uint32_t *screen_row_ptr = Graphics::get_buffer_address(loc.x, loc.y + row);
