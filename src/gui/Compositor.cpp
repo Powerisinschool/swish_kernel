@@ -66,7 +66,7 @@ void Compositor::render() const {
     // Draw all windows
     const CompositorWindow *currentWindow = head;
     while (currentWindow != nullptr) {
-        currentWindow->window->render();
+        currentWindow->window->render(currentWindow->next == nullptr);
         currentWindow = currentWindow->next;
     }
 
@@ -93,14 +93,14 @@ void Compositor::inject_mouse_button(const uint64_t x, const uint64_t y, const u
 
     while (curr != nullptr) {
         if (Window *win = curr->window;
-            x >= win->x && x <= (win->x + win->get_surface()->width)
-            && y >= win->y && y <= (win->y + win->get_surface()->height)) {
+            x >= win->loc.x && x <= (win->loc.x + win->get_surface()->width)
+            && y >= win->loc.y && y <= (win->loc.y + win->get_surface()->height)) {
             if (is_down) {
                 focus_window(win);
             }
 
-            const uint64_t local_x = x - win->x;
-            const uint64_t local_y = y - win->y;
+            const uint64_t local_x = x - win->loc.x;
+            const uint64_t local_y = y - win->loc.y;
 
             win->on_mouse_button(local_x, local_y, button, is_down);
 
@@ -109,4 +109,9 @@ void Compositor::inject_mouse_button(const uint64_t x, const uint64_t y, const u
 
         curr = curr->prev;
     }
+}
+
+void Compositor::inject_mouse_move(const uint64_t x, const uint64_t y) const {
+    if (tail == nullptr) return;
+    tail->window->on_mouse_move(x, y);
 }

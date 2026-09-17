@@ -52,3 +52,7 @@ bool String::operator==(const char* other) const {
 const char* String::c_str() const { return data; }
 bool String::empty() const { return length == 0; }
 size_t String::len() const { return length; }
+String::iterator String::begin() { return data; }
+String::iterator String::end() { return data + length; }
+String::const_iterator String::begin() const { return data; }
+String::const_iterator String::end() const { return data + length; }

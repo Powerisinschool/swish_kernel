@@ -155,4 +155,12 @@ namespace Graphics {
     size_t get_height() {
         return height;
     }
+
+    size_t get_font_width() {
+        return font_width;
+    }
+
+    size_t get_font_height() {
+        return font_height;
+    }
 }

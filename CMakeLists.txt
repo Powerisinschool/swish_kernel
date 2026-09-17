@@ -81,6 +81,8 @@ set(CORE_SRCS
                 src/libc/memset.cpp
                 src/libc/memcpy.cpp
                 src/libc/strlen.cpp
+                src/libc/memmove.cpp
+                src/libc/strncpy.cpp
                 src/terminal.cpp
                 src/kernel/String.cpp
                 src/kernel/Shell.cpp
@@ -99,6 +101,7 @@ set(GUI_SRCS
         src/gui/Font.cpp
         src/gui/Window.cpp
         src/gui/Compositor.cpp
+        src/gui/TerminalWindow.cpp
 )
 
 set(CORE_HEADERS
@@ -120,7 +123,9 @@ set(CORE_HEADERS
         include/gui/Window.h
         include/gui/Compositor.h
         include/gui/cursor.h
+        include/gui/TerminalWindow.h
         include/arch/hal/cpu.h
+        include/kernel/OutputStream.hpp
 )
 
 add_executable(kernel.elf

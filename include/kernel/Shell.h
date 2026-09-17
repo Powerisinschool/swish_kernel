@@ -1,4 +1,5 @@
 #pragma once
+#include "OutputStream.hpp"
 #include "String.hpp"
 
 inline void using_history() {}
@@ -18,10 +19,10 @@ public:
     String HISTORY_FILE;
 
     // Core evaluation loop
-    bool eval_user_input(const String& rawInput);
+    bool eval_user_input(const String& rawInput, OutputStream *out = nullptr);
 
 private:
     Shell() = default;
-    static bool process_builtin(const String& cmd, String* args, int argCount);
-    static void display_help();
+    static bool process_builtin(const String& cmd, String* args, int argCount, OutputStream &output);
+    static void display_help(OutputStream &output);
 };

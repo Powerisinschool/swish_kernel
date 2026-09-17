@@ -50,4 +50,6 @@ namespace Graphics {
     uint32_t *get_terminal_buffer();
     size_t get_width();
     size_t get_height();
+    size_t get_font_width();
+    size_t get_font_height();
 }

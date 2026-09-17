@@ -3,8 +3,8 @@
 #include "string.h"
 #include "kernel/memory.hpp"
 
-Window::Window(const size_t x, const size_t y, const size_t width, const size_t height, const Color bg_color) : x(x),
-    y(y) {
+Window::Window(const size_t x, const size_t y, const size_t width, const size_t height, const Color bg_color) : loc(x, y)
+{
     const auto pixel_buffer = static_cast<uint32_t *>(kmalloc(width * height * sizeof(uint32_t)));
     surface = new Surface{pixel_buffer, width, height, width * sizeof(uint32_t), bg_color};
 
@@ -12,26 +12,73 @@ Window::Window(const size_t x, const size_t y, const size_t width, const size_t 
     for (size_t i = 0; i < width * height; i++) {
         pixel_buffer[i] = bg_bytes;
     }
+
+    cols = width / Graphics::get_font_width();
+    rows = height / Graphics::get_font_height();
+    text_grid = static_cast<char *>(kmalloc(cols * rows));
+    memset(text_grid, 0, cols * rows);
 }
 
 void Window::inject_key(const char c) {
-    if (c == '\b') {
-        if (char_index > 0) {
-            text_buffer[--char_index] = ' ';
-        }
-    } else {
-        if (char_index >= 31) return;
-        text_buffer[char_index++] = c;
-        text_buffer[char_index] = '\0';
+    if (cols == 0 || rows == 0) return;
+
+    if (c == '\n') {
+        cursor.x = 0;
+        cursor.y++;
+        scroll_forward();
+        return;
     }
-    Graphics::draw_string(surface, 10, 10, text_buffer, Color::black);
+
+    if (c == '\b') {
+        if (cursor.x > 0) {
+            text_grid[cursor.y * cols + --cursor.x] = ' ';
+        } else if (cursor.y > 0) {
+            cursor.y--;
+            for (size_t col = 0; col < cols; col++) {
+                if (text_grid[cursor.y * cols + col] == '\0') break;
+                cursor.x++;
+            }
+        }
+        return;
+    }
+
+    text_grid[cursor.y * cols + cursor.x++] = c;
+    if (cursor.x < cols) text_grid[cursor.y * cols + cursor.x] = 0;
+    if (cursor.x >= cols) {
+        cursor.x = 0;
+        cursor.y++;
+    }
+    scroll_forward();
 }
 
-void Window::render() const {
+void Window::scroll_forward() {
+    if (cursor.y >= rows) {
+        memmove(text_grid, text_grid + cols, (rows - 1) * cols);
+        memset(text_grid + (rows - 1) * cols, 0, cols);
+        cursor.y = rows - 1;
+    }
+}
+
+void Window::render(const bool focused) const {
     Graphics::draw_bg(surface);
-    Graphics::draw_string(surface, 10, 10, text_buffer, Color::black);
+
+    const size_t fw = Graphics::get_font_width();
+    const size_t fh = Graphics::get_font_height();
+
+    // Draw the cursor to screen
+    if (focused && !is_dragging) Graphics::draw_rect_filled(surface, cursor.x * fw, cursor.y * fh, fw, fh, Color::gray);
+
+    for (size_t row = 0; row < rows; row++) {
+        for (size_t col = 0; col < cols; col++) {
+            const char c = text_grid[row * cols + col];
+            if (c == '\0') break; // skip the current row
+            if (c == ' ') continue; // skip the current cell
+            Graphics::draw_char(surface, col * fw, row * fh, c, Color::black);
+        }
+    }
+
     for (size_t row = 0; row < surface->height; row++) {
-        uint32_t *screen_row_ptr = Graphics::get_buffer_address(x, y + row);
+        uint32_t *screen_row_ptr = Graphics::get_buffer_address(loc.x, loc.y + row);
         if (!screen_row_ptr) continue;
 
         const uint32_t *window_row_ptr = surface->buffer + (row * surface->width);
@@ -39,15 +86,30 @@ void Window::render() const {
     }
 }
 
-void Window::on_mouse_button(uint64_t local_x, uint64_t local_y, uint8_t button, const bool is_down) {
+void Window::on_mouse_button(const uint64_t local_x, const uint64_t local_y, uint8_t button, const bool is_down) {
     if (is_down) {
         temp_bg = surface->background;
         Graphics::set_bg(surface, Color::red);
+
+        is_dragging = true;
+        drag_offset = Coordinate{local_x, local_y};
     } else {
         Graphics::set_bg(surface, temp_bg);
+
+        is_dragging = false;
+        drag_offset = Coordinate{0, 0};
     }
+}
+
+void Window::on_mouse_move(const uint64_t global_x, const uint64_t global_y) {
+    if (!is_dragging) return;
+    loc = Coordinate{global_x, global_y} - drag_offset;
 }
 
 const Surface *Window::get_surface() const {
     return surface;
+}
+
+Coordinate Coordinate::operator-(const Coordinate &coordinate) const {
+    return Coordinate{x - coordinate.x, y - coordinate.y};
 }

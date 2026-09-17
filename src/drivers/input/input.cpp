@@ -229,6 +229,7 @@ namespace Input {
             const bool middle_is_down = (event.buttons & 0x04) != 0;
 
             if (active_context == DisplayContext::GUI && compositor != nullptr) {
+                compositor->inject_mouse_move(mouseX, mouseY);
                 if (left_is_down && !left_button_was_down) {
                     compositor->inject_mouse_button(mouseX, mouseY, 0, true);
                 } else if (!left_is_down && left_button_was_down) {

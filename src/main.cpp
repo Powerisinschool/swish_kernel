@@ -10,6 +10,7 @@
 #include "drivers/pic.h"
 #include "gui/Compositor.h"
 #include "gui/Graphics.h"
+#include "gui/TerminalWindow.h"
 #include "gui/Window.h"
 #include "kernel/String.hpp"
 #include "kernel/Shell.h"
@@ -55,15 +56,23 @@ extern "C" [[noreturn]] void _start()
     Window window2(fb->width / 4, fb->height / 4, 350, 250, Color::green);
     // window3 will be on top (Z-index 2)
     Window window3(fb->width / 2, fb->height / 3, 300, 200, Color::yellow);
+    // window4 will be on top (Z-index 3)
+    const size_t win4X_cell = 8;
+    const size_t win4y_cell = 7;
+    size_t win4X = fb->width / win4X_cell;
+    size_t win4y = fb->height / win4y_cell;
+    TerminalWindow window4(win4X, win4y, win4X * (win4X_cell - 2), win4y * (win4y_cell - 2), "window4> ");
 
     Compositor compositor(&rootSurface);
     // Add them to the compositor
     compositor.add_window(&window1);
     compositor.add_window(&window2);
     compositor.add_window(&window3);
+    compositor.add_window(&window3);
+    compositor.add_window(&window4);
     compositor.render();
 
-    struct flanterm_context *ft_ctx = flanterm_fb_init(
+    flanterm_context *ft_ctx = flanterm_fb_init(
         nullptr,
         nullptr,
         Graphics::get_terminal_buffer(),
