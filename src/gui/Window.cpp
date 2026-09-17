@@ -115,7 +115,7 @@ void Window::on_mouse_button(const uint64_t local_x, const uint64_t local_y, uin
             return;
         }
 
-        if (local_y <= 18) {
+if (local_y < fh) {
             // temp_bg = surface->background;
             // Graphics::set_bg(surface, Color::red);
             is_dragging = true;
