@@ -1,20 +1,21 @@
 #pragma once
-#include <stdint.h>
+
+#include "kernel/OutputStream.hpp"
 #include "kernel/String.hpp"
 
 struct flanterm_context;
 
-class Terminal
+class Terminal : public OutputStream
 {
 public:
-    void initialize(struct flanterm_context *context);
+    void initialize(flanterm_context *context);
 
-    Terminal &operator<<(const char *str);
-    Terminal &operator<<(const String &str);
-    Terminal &operator<<(char c);
-    Terminal &operator<<(int64_t num);
+    Terminal &operator<<(const char *str) final;
+    Terminal &operator<<(const String &str) final;
+    Terminal &operator<<(char c) final;
+    Terminal &operator<<(int64_t num) final;
 private:
-    struct flanterm_context *ctx;
+    flanterm_context *ctx{};
 };
 
 void k_print(const char *str);

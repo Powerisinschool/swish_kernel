@@ -40,6 +40,8 @@ add_executable(kernel.elf
                 src/libc/memset.cpp
                 src/libc/memcpy.cpp
                 src/libc/strlen.cpp
+                src/libc/memmove.cpp
+                src/libc/strncpy.cpp
                 src/terminal.cpp
                 src/arch/gdt.cpp
                 src/arch/idt.cpp
@@ -59,7 +61,6 @@ add_executable(kernel.elf
                 src/gui/Font.cpp
                 src/gui/Window.cpp
                 src/gui/Compositor.cpp
-                src/libc/memmove.cpp
                 src/gui/TerminalWindow.cpp
 
                 # Explicitly listing headers helps CLion's code insight
@@ -85,7 +86,7 @@ add_executable(kernel.elf
                 include/gui/Compositor.h
                 include/gui/cursor.h
                 include/gui/TerminalWindow.h
-        src/libc/strncpy.cpp
+        include/kernel/OutputStream.hpp
 )
 
 set_target_properties(kernel.elf PROPERTIES LINKER_LANGUAGE CXX)

@@ -19,4 +19,12 @@ public:
     const char *c_str() const;
     bool empty() const;
     size_t len() const;
+
+    using iterator = char *;
+    using const_iterator = const char *;
+
+    iterator begin();
+    iterator end();
+    [[nodiscard]] const_iterator begin() const;
+    [[nodiscard]] const_iterator end() const;
 };

@@ -11,7 +11,7 @@ bool is_shell_builtin(const String& cmd) {
 }
 
 // Forward declaration of the built-in processor
-bool Shell::process_builtin(const String& cmd, String* args, int argCount) {
+bool Shell::process_builtin(const String& cmd, String* args, int argCount, OutputStream &output) {
     if (cmd == "exit") {
         return true;
     }
@@ -21,21 +21,21 @@ bool Shell::process_builtin(const String& cmd, String* args, int argCount) {
     }
     if (cmd == "echo") {
         for (int i = 1; i < argCount - 1; i++) {
-            cout << args[i] << " ";
+            output << args[i] << " ";
         }
-        cout << args[argCount - 1] << "\r\n";
+        output << args[argCount - 1] << "\r\n";
         return false;
     }
     if (cmd == "help") {
-        display_help();
+        display_help(output);
         return false;
     }
-    cout << "[Shell built-in command `" << cmd << "`]\r\n";
+    output << "[Shell built-in command `" << cmd << "`]\r\n";
     if (argCount > 1) {
-        cout << "Args:\r\n";
+        output << "Args:\r\n";
     }
     for (int i = 1; i < argCount; i++) {
-        cout << "    - " << args[i] << "\r\n";
+        output << "    - " << args[i] << "\r\n";
     }
     return false;
 }
@@ -45,7 +45,7 @@ Shell &Shell::getInstance() {
     return instance;
 }
 
-bool Shell::eval_user_input(const String &rawInput) {
+bool Shell::eval_user_input(const String &rawInput, OutputStream *out) {
     if (rawInput.empty()) {
         return false;
     }
@@ -57,6 +57,8 @@ bool Shell::eval_user_input(const String &rawInput) {
     const char* str = rawInput.c_str();
     char buffer[256];
     int bufIdx = 0;
+
+    OutputStream& output = (out != nullptr) ? *out : cout;
 
     // Parse the string character by character
     for (size_t i = 0; i <= rawInput.len(); i++) {
@@ -86,14 +88,13 @@ bool Shell::eval_user_input(const String &rawInput) {
 
     if (is_shell_builtin(cmd))
     {
-        return process_builtin(cmd, args, argCount);
+        return process_builtin(cmd, args, argCount, output);
     }
-    // Replace with your terminal output mechanism (TODO: GUI)
-    cout << "Command not found or external execution not yet supported: " << cmd.c_str() << "\r\n";
+    output << "Command not found or external execution not yet supported: " << cmd.c_str() << "\r\n";
 
     return false;
 }
 
-void Shell::display_help() {
-    cout << "Type a command `help` for a list of available commands.\r\n";
+void Shell::display_help(OutputStream &output) {
+    output << "Type a command `help` for a list of available commands.\r\n";
 }
