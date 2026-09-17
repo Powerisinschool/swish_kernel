@@ -94,7 +94,8 @@ extern "C" [[noreturn]] void _start()
         nullptr,
         nullptr,
         0, 0, 1, 0, 0, 0,
-        0);
+        0,
+        true);
 
     cout.initialize(ft_ctx);
 
