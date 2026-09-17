@@ -15,6 +15,9 @@ Window::Window(const size_t x, const size_t y, const size_t width, const size_t 
 
     cols = width / Graphics::get_font_width();
     rows = height / Graphics::get_font_height() - 1;
+    if (rows <= 1) {
+        should_close = true;
+    }
     text_grid = static_cast<char *>(kmalloc(cols * rows));
     memset(text_grid, 0, cols * rows);
 }
