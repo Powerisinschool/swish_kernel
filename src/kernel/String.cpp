@@ -57,7 +57,7 @@ String::const_iterator String::begin() const { return data; }
 String::const_iterator String::end() const { return data + length; }
 String::reference String::operator[](size_t index) { return data[index]; }
 String::reference String::at(size_t index) {
-    if (index >= length) return data[0];
+    if (index >= length) return data[length]; // safe: always the null terminator
     return data[index];
 }
 String::reference String::front() { return data[0]; }
