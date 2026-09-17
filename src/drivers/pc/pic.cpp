@@ -1,4 +1,4 @@
-#include <arch/io.h>
+#include <arch/x86_64/io.h>
 #include <drivers/pic.h>
 
 #define ICW1_ICW4  0x01    // Indicates that ICW4 will be present

@@ -1,39 +1,80 @@
 cmake_minimum_required(VERSION 4.2)
 
+# Define target architecture (default to x86_64)
+set(ARCH "x86_64" CACHE STRING "Target architecture to build for")
+
 # Force a freestanding, bare-metal environment configuration
 set(CMAKE_SYSTEM_NAME Generic)
-set(CMAKE_SYSTEM_PROCESSOR x86_64)
+set(CMAKE_SYSTEM_PROCESSOR ${ARCH})
 
 # Tell CMake not to look for standard system libraries or compiler runtimes
 set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
+project(BareMetalKernel C CXX ASM)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-project(BareMetalKernel C CXX ASM)
-
 # Define the Clang cross-compilation flags
-set(BARE_METAL_FLAGS
-    "-target" "x86_64-unknown-none-elf"
-    "-ffreestanding"
-    "-mcmodel=kernel"
-    "-mno-red-zone"
-    "-fno-exceptions"
-    "-fno-rtti"
-    "-fno-pic"
-    "-fno-pie"
-    "-mno-sse"
-    "-mno-sse2"
-    "-mno-mmx"
-    "-mno-80387"
-    "-mgeneral-regs-only"
-    "-O3"
-    "-fomit-frame-pointer"
+# Generic freestanding flags for all architectures
+set(COMMON_FLAGS
+        "-ffreestanding"
+        "-fno-exceptions"
+        "-fno-rtti"
+        "-fno-pic"
+        "-fno-pie"
+        "-O3"
+        "-fomit-frame-pointer"
 )
 
+# Architecture-specific flags and sources
+if(ARCH STREQUAL "x86_64")
+    list(APPEND ARCH_FLAGS
+        "-target" "x86_64-unknown-none-elf"
+        "-mcmodel=kernel"
+        "-mno-red-zone"
+        "-mno-sse"
+        "-mno-sse2"
+        "-mno-mmx"
+        "-mno-80387"
+        "-mgeneral-regs-only"
+    )
+
+    list(APPEND ARCH_LINK_FLAGS
+            "-target" "x86_64-unknown-none-elf"
+            "-fuse-ld=lld"
+    )
+
+    # x86_64 and PC specific sources
+    list(APPEND ARCH_SRCS
+            src/arch/x86_64/gdt.cpp
+            src/arch/x86_64/idt.cpp
+            src/arch/x86_64/interrupts.cpp
+            src/arch/x86_64/interrupts.S
+            src/arch/x86_64/cpu.cpp
+    )
+
+    # Platform Motherboard Drivers (PC)
+    list(APPEND DRIVER_SRCS
+            src/drivers/pc/pic.cpp
+            src/drivers/input/keyboard.cpp
+            src/drivers/input/mouse.cpp
+    )
+
+    list(APPEND ARCH_HEADERS
+            include/arch/x86_64/gdt.h
+            include/arch/x86_64/idt.h
+            include/arch/x86_64/io.h
+            include/arch/x86_64/interrupts.h
+    )
+elseif(ARCH STREQUAL "aarch64")
+    # Future AArch64 configuration will go here
+endif()
+
+add_compile_options(${COMMON_FLAGS} ${ARCH_FLAGS})
+
 # Apply flags to both the C compiler and the linker
-add_compile_options(${BARE_METAL_FLAGS})
-add_executable(kernel.elf
+#add_compile_options(${BARE_METAL_FLAGS})
+set(CORE_SRCS
                 external/flanterm/src/flanterm.c
                 external/flanterm/src/flanterm_backends/fb.c
                 src/main.cpp
@@ -43,51 +84,58 @@ add_executable(kernel.elf
                 src/libc/memmove.cpp
                 src/libc/strncpy.cpp
                 src/terminal.cpp
-                src/arch/gdt.cpp
-                src/arch/idt.cpp
-                src/drivers/pic.cpp
-                src/drivers/keyboard.cpp
-                src/arch/interrupts.cpp
-                src/arch/interrupts.S
                 src/kernel/String.cpp
                 src/kernel/Shell.cpp
                 src/kernel/cxxabi.cpp
                 src/kernel/memory_operators.cpp
                 src/kernel/memory.cpp
-                src/utils/ring_buffer.cpp
-                src/subsystems/input.cpp
-                src/gui/Graphics.cpp
-                src/drivers/mouse.cpp
-                src/gui/Font.cpp
-                src/gui/Window.cpp
-                src/gui/Compositor.cpp
-                src/gui/TerminalWindow.cpp
+)
 
-                # Explicitly listing headers helps CLion's code insight
-                include/limine.h
-                include/string.h
-                include/terminal.h
-                include/arch/gdt.h
-                include/arch/idt.h
-                include/arch/io.h
-                include/drivers/keyboard.h
-                include/drivers/pic.h
-                include/compiler.h
-                include/arch/interrupts.h
-                include/kernel/shell.h
-                include/kernel/String.hpp
-                include/kernel/memory.hpp
-                include/utils/ring_buffer.h
-                include/subsystems/input.h
-                include/gui/Graphics.h
-                include/drivers/mouse.h
-                include/gui/Font.h
-                include/gui/Window.h
-                include/gui/Compositor.h
-                include/gui/cursor.h
-                include/gui/TerminalWindow.h
+set(SUBSYSTEM_SRCS
+        src/drivers/input/ring_buffer.cpp
+        src/drivers/input/input.cpp
+)
+
+set(GUI_SRCS
+        src/gui/Graphics.cpp
+        src/gui/Font.cpp
+        src/gui/Window.cpp
+        src/gui/Compositor.cpp
+        src/gui/TerminalWindow.cpp
+)
+
+set(CORE_HEADERS
+        # Explicitly listing headers helps CLion's code insight
+        include/limine.h
+        include/string.h
+        include/terminal.h
+        include/drivers/keyboard.h
+        include/drivers/pic.h
+        include/compiler.h
+        include/kernel/shell.h
+        include/kernel/String.hpp
+        include/kernel/memory.hpp
+        include/utils/ring_buffer.h
+        include/subsystems/input.h
+        include/gui/Graphics.h
+        include/drivers/mouse.h
+        include/gui/Font.h
+        include/gui/Window.h
+        include/gui/Compositor.h
+        include/gui/cursor.h
+        include/gui/TerminalWindow.h
+        include/arch/hal/cpu.h
         include/kernel/OutputStream.hpp
 )
+
+add_executable(kernel.elf
+        ${CORE_SRCS}
+        ${SUBSYSTEM_SRCS}
+        ${GUI_SRCS}
+        ${DRIVER_SRCS}
+        ${ARCH_SRCS}
+        ${CORE_HEADERS}
+        ${ARCH_HEADERS})
 
 set_target_properties(kernel.elf PROPERTIES LINKER_LANGUAGE CXX)
 execute_process(
@@ -101,7 +149,7 @@ target_include_directories(kernel.elf PRIVATE
                             "${CLANG_RESOURCE_DIR}/include")
 
 add_link_options(
-    "-m" "elf_x86_64"
+    ${ARCH_LINK_FLAGS}
     "-static"
     "-T${CMAKE_CURRENT_SOURCE_DIR}/linker.ld"
 )
@@ -110,16 +158,6 @@ target_link_options(kernel.elf PRIVATE
                     "-T${CMAKE_CURRENT_SOURCE_DIR}/linker.ld"
                     "-z" "max-page-size=0x1000"
                     "-no-pie")
-
-# # Add the Flanterm library as a static library target
-# add_library(flanterm STATIC
-#             external/flanterm/src/flanterm.c
-#             external/flanterm/src/flanterm_backends/fb.c)
-
-# target_include_directories(flanterm PUBLIC
-#                             external/flanterm/src)
-
-# target_link_libraries(kernel.elf PUBLIC flanterm)
 
 # Find the host system tools needed to build an ISO image
 find_program(XORRISO_PATH xorriso REQUIRED)

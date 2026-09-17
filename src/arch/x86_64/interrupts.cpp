@@ -1,9 +1,10 @@
-#include <arch/interrupts.h>
+#include <arch/x86_64/interrupts.h>
 #include <terminal.h>
 #include <drivers/pic.h>
 #include <drivers/keyboard.h>
 
-#include "arch/io.h"
+#include "arch/hal/cpu.h"
+#include "arch/x86_64/io.h"
 #include "drivers/mouse.h"
 
 extern "C" void interrupt_handler(struct cpu_status* regs)
@@ -21,7 +22,7 @@ extern "C" void interrupt_handler(struct cpu_status* regs)
             // Halt execution completely
             // ReSharper disable once CppDFAEndlessLoop
             while (true) {
-                __asm__ volatile("hlt");
+                arch_halt_cpu();
             }
             break;
 
@@ -50,7 +51,7 @@ extern "C" void interrupt_handler(struct cpu_status* regs)
                 // Halt the CPU on critical exceptions
                 // ReSharper disable once CppDFAEndlessLoop
                 while (true) {
-                    __asm__ volatile("hlt");
+                    arch_halt_cpu();
                 }
             }
             break;
