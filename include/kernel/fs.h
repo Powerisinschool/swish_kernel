@@ -1,0 +1,54 @@
+#pragma once
+
+#include <stdint.h>
+
+struct FSNodeFlags {
+    uint32_t data;
+
+    static FSNodeFlags FILE;
+    static FSNodeFlags DIRECTORY;
+    static FSNodeFlags CHARDEVICE;
+    static FSNodeFlags BLOCKDEVICE;
+    static FSNodeFlags PIPE;
+    static FSNodeFlags SYMLINK;
+    static FSNodeFlags MOUNTPOINT;
+
+    bool operator==(const FSNodeFlags &other) const;
+};
+
+struct dirent {
+    char name[128];
+    uint32_t inode;
+};
+
+class FSNode {
+public:
+    char name[128];
+    FSNodeFlags flags;
+    uint32_t length;
+    uint32_t inode;
+    uint32_t impl;
+
+    virtual ~FSNode() = default;
+
+    // Core File I/O
+    virtual uint32_t read(uint32_t offset, uint32_t size, void *buffer);
+    virtual uint32_t write(uint32_t offset, uint32_t size, void *buffer);
+
+    // Lifecycle
+    virtual void open();
+    virtual void close();
+
+    // Directory Operations
+    virtual dirent *readdir(uint32_t index);
+    virtual FSNode *lookup(const char *search_name);
+};
+
+extern FSNode *fs_root;
+
+uint32_t vfs_read(FSNode *node, uint32_t offset, uint32_t size, void *buffer);
+uint32_t vfs_write(FSNode *node, uint32_t offset, uint32_t size, void *buffer);
+void vfs_open(FSNode *node);
+void vfs_close(FSNode *node);
+dirent *vfs_readdir(FSNode *node, uint32_t index);
+FSNode *vfs_lookup(FSNode *node, const char *search_name);

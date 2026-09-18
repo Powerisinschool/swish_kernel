@@ -89,6 +89,7 @@ set(CORE_SRCS
                 src/kernel/cxxabi.cpp
                 src/kernel/memory_operators.cpp
                 src/kernel/memory.cpp
+        src/kernel/fs.cpp
 )
 
 set(SUBSYSTEM_SRCS
@@ -126,6 +127,8 @@ set(CORE_HEADERS
         include/gui/TerminalWindow.h
         include/arch/hal/cpu.h
         include/kernel/OutputStream.hpp
+        include/kernel/fs.h
+        include/kernel/ramfs.h
 )
 
 add_executable(kernel.elf
