@@ -1,4 +1,4 @@
-#include <kernel/fs.h>
+#include <kernel/fs.hpp>
 
 FSNodeFlags FSNodeFlags::FILE = {0x01};
 FSNodeFlags FSNodeFlags::DIRECTORY = {0x02};
@@ -61,4 +61,12 @@ dirent *vfs_readdir(FSNode *node, const uint32_t index) {
 FSNode *vfs_lookup(FSNode *node, const char *search_name) {
     if (node == nullptr || node->flags != FSNodeFlags::DIRECTORY) return nullptr;
     return node->lookup(search_name);
+}
+
+bool FSNode::operator==(const FSNode &other) const {
+    return (this->inode == other.inode);
+}
+
+bool FSNode::operator==(const String &comp) const {
+    return (comp == name);
 }

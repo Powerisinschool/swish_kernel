@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 
+#include "String.hpp"
+
 struct FSNodeFlags {
     uint32_t data;
 
@@ -17,8 +19,8 @@ struct FSNodeFlags {
 };
 
 struct dirent {
-    char name[128];
     uint32_t inode;
+    char name[128];
 };
 
 class FSNode {
@@ -42,6 +44,9 @@ public:
     // Directory Operations
     virtual dirent *readdir(uint32_t index);
     virtual FSNode *lookup(const char *search_name);
+
+    bool operator==(const FSNode &other) const;
+    bool operator==(const String &comp) const;
 };
 
 extern FSNode *fs_root;
