@@ -12,7 +12,7 @@ uint32_t RamFSFile::read(const uint32_t offset, const uint32_t size, void *buffe
     return (read_size);
 }
 
-uint32_t RamFSFile::write(const uint32_t offset, const uint32_t size, void *buffer) {
+uint32_t RamFSFile::write(const uint32_t offset, const uint32_t size, const void *buffer) {
     if (offset + size > length) file_data.resize(offset + size);
     memcpy(file_data.begin() + offset, buffer, size);
     if (offset + size > length) length = offset + size;
@@ -33,4 +33,8 @@ FSNode *RamFSDirectory::lookup(const char *search_name) {
         if (*child == search_name) return (child);
     }
     return (nullptr);
+}
+
+void RamFSDirectory::add_child(FSNode *child) {
+    children.push_back(child);
 }

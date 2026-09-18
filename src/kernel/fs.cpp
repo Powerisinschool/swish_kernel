@@ -14,11 +14,19 @@ bool FSNodeFlags::operator==(const FSNodeFlags &other) const {
 
 FSNode *fs_root = nullptr;
 
+void FSNode::set_flags(FSNodeFlags &type) {
+    flags = type;
+}
+
+void FSNode::set_name(const char *new_name) {
+    strncpy(name, new_name, strlen(new_name) + 1);
+}
+
 uint32_t FSNode::read(uint32_t offset, uint32_t size, void *buffer) {
     return (0);
 }
 
-uint32_t FSNode::write(uint32_t offset, uint32_t size, void *buffer) {
+uint32_t FSNode::write(uint32_t offset, uint32_t size, const void *buffer) {
     return (0);
 }
 
@@ -33,12 +41,19 @@ FSNode *FSNode::lookup(const char *search_name) {
     return (nullptr);
 }
 
+void FSNode::add_child(FSNode *child) {}
+
+void vfs_set_name(FSNode *node, const char *name) {
+    if (node == nullptr || node->flags != FSNodeFlags::DIRECTORY) return;
+    node->set_name(name);
+}
+
 uint32_t vfs_read(FSNode *node, const uint32_t offset, const uint32_t size, void *buffer) {
     if (node == nullptr) return 0;
     return node->read(offset, size, buffer);
 }
 
-uint32_t vfs_write(FSNode *node, const uint32_t offset, const uint32_t size, void *buffer) {
+uint32_t vfs_write(FSNode *node, const uint32_t offset, const uint32_t size, const void *buffer) {
     if (node == nullptr) return 0;
     return node->write(offset, size, buffer);
 }
@@ -61,6 +76,11 @@ dirent *vfs_readdir(FSNode *node, const uint32_t index) {
 FSNode *vfs_lookup(FSNode *node, const char *search_name) {
     if (node == nullptr || node->flags != FSNodeFlags::DIRECTORY) return nullptr;
     return node->lookup(search_name);
+}
+
+void vfs_add_child(FSNode *node, FSNode *child) {
+    if (node == nullptr || node->flags != FSNodeFlags::DIRECTORY) return;
+    node->add_child(child);
 }
 
 bool FSNode::operator==(const FSNode &other) const {

@@ -33,9 +33,13 @@ public:
 
     virtual ~FSNode() = default;
 
+    // Helper Functions
+    virtual void set_flags(FSNodeFlags &type);
+    virtual void set_name(const char *new_name);
+
     // Core File I/O
     virtual uint32_t read(uint32_t offset, uint32_t size, void *buffer);
-    virtual uint32_t write(uint32_t offset, uint32_t size, void *buffer);
+    virtual uint32_t write(uint32_t offset, uint32_t size, const void *buffer);
 
     // Lifecycle
     virtual void open();
@@ -44,6 +48,7 @@ public:
     // Directory Operations
     virtual dirent *readdir(uint32_t index);
     virtual FSNode *lookup(const char *search_name);
+    virtual void add_child(FSNode *child);
 
     bool operator==(const FSNode &other) const;
     bool operator==(const String &comp) const;
@@ -51,9 +56,11 @@ public:
 
 extern FSNode *fs_root;
 
+void vfs_set_name(FSNode *node, const char *new_name);
 uint32_t vfs_read(FSNode *node, uint32_t offset, uint32_t size, void *buffer);
-uint32_t vfs_write(FSNode *node, uint32_t offset, uint32_t size, void *buffer);
+uint32_t vfs_write(FSNode *node, uint32_t offset, uint32_t size, const void *buffer);
 void vfs_open(FSNode *node);
 void vfs_close(FSNode *node);
 dirent *vfs_readdir(FSNode *node, uint32_t index);
 FSNode *vfs_lookup(FSNode *node, const char *search_name);
+void vfs_add_child(FSNode *node, FSNode *child);

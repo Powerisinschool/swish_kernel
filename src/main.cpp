@@ -12,6 +12,8 @@
 #include "gui/Graphics.h"
 #include "gui/TerminalWindow.h"
 #include "gui/Window.h"
+#include "kernel/fs.hpp"
+#include "kernel/ramfs.hpp"
 #include "kernel/String.hpp"
 #include "kernel/Shell.h"
 #include "subsystems/input.h"
@@ -148,6 +150,18 @@ extern "C" [[noreturn]] void _start()
     //
 
     Input::set_compositor(&compositor);
+
+    fs_root = new RamFSDirectory();
+    fs_root->set_flags(FSNodeFlags::DIRECTORY);
+    vfs_set_name(fs_root, "/");
+
+    auto test_file = new RamFSFile();
+    test_file->set_flags(FSNodeFlags::FILE);
+    vfs_set_name(test_file, "test.txt");
+    String data = "Hello VFS!";
+    vfs_write(test_file, 0, data.len(), data.c_str());
+
+    vfs_add_child(fs_root, test_file);
 
     while (true) {
         __asm__ volatile("cli");
