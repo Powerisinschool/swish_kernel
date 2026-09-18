@@ -1,5 +1,7 @@
 #include <kernel/ramfs.hpp>
 
+#include "terminal.h"
+
 uint32_t RamFSFile::read(const uint32_t offset, const uint32_t size, void *buffer) {
     if (offset >= length) return (0);
 
@@ -29,7 +31,7 @@ dirent *RamFSDirectory::readdir(const uint32_t index) {
 }
 
 FSNode *RamFSDirectory::lookup(const char *search_name) {
-    for (auto &child : children) {
+    for (const auto &child : children) {
         if (*child == search_name) return (child);
     }
     return (nullptr);

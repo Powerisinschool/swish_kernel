@@ -19,7 +19,7 @@ public:
     String HISTORY_FILE;
 
     // Core evaluation loop
-    bool eval_user_input(const String& rawInput, OutputStream *out = nullptr);
+    static bool eval_user_input(const String& rawInput, OutputStream *out = nullptr);
 
 private:
     Shell() = default;

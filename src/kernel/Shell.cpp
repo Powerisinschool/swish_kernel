@@ -1,10 +1,12 @@
 #include <kernel/Shell.h>
 
 #include "terminal.h"
+#include "kernel/fs.hpp"
+#include "kernel/ramfs.hpp"
 #include "subsystems/input.h"
 
 bool is_shell_builtin(const String& cmd) {
-    if (cmd == "help" || cmd == "clear" || cmd == "echo" || cmd == "display" || cmd == "exit") {
+    if (cmd == "help" || cmd == "clear" || cmd == "echo" || cmd == "display" || cmd == "exit" || cmd == "ls" || cmd == "cat" || cmd == "touch") {
         return true;
     }
     return false;
@@ -24,6 +26,64 @@ bool Shell::process_builtin(const String& cmd, String* args, int argCount, Outpu
             output << args[i] << " ";
         }
         output << args[argCount - 1] << "\r\n";
+        return false;
+    }
+    if (cmd == "ls") {
+        uint32_t index = 0;
+        dirent *entry = vfs_readdir(fs_root, index);
+
+        while (entry != nullptr) {
+            output << entry->name << " ";
+            delete entry;
+
+            index++;
+            entry = vfs_readdir(fs_root, index);
+        }
+        output << "\r\n";
+        return false;
+    }
+    if (cmd == "cat") {
+        for (int i = 1; i < argCount; i++) {
+            const auto file = vfs_lookup(fs_root, args[i].c_str());
+            if (file == nullptr) {
+                output << "No such file or directory: " << args[i] << "\r\n";
+                continue;
+            }
+
+            if (file->flags != FSNodeFlags::FILE) {
+                output << "Not a file: " << args[i] << "\r\n";
+                continue;
+            }
+
+            auto *buffer = new char[file->length + 1];
+
+            vfs_read(file, 0, file->length, buffer);
+            buffer[file->length] = '\0';
+
+            output << buffer;
+
+            delete[] buffer;
+        }
+        return false;
+    }
+    if (cmd == "touch") {
+        for (int i = 1; i < argCount; i++) {
+            // 1. Check if the file already exists
+            const auto existing = vfs_lookup(fs_root, args[i].c_str());
+            if (existing != nullptr) {
+                // Real UNIX updates the modified timestamp here.
+                // We do not have time tracking yet, so we just skip it.
+                continue;
+            }
+
+            // 2. Instantiate the new file
+            auto *new_file = new RamFSFile();
+            new_file->set_flags(FSNodeFlags::FILE);
+            vfs_set_name(new_file, args[i].c_str());
+
+            // 3. Attach it to the root directory
+            vfs_add_child(fs_root, new_file);
+        }
         return false;
     }
     if (cmd == "help") {

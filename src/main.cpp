@@ -151,17 +151,18 @@ extern "C" [[noreturn]] void _start()
 
     Input::set_compositor(&compositor);
 
-    fs_root = new RamFSDirectory();
-    fs_root->set_flags(FSNodeFlags::DIRECTORY);
-    vfs_set_name(fs_root, "/");
+    auto root_dir = new RamFSDirectory();
+    root_dir->set_flags(FSNodeFlags::DIRECTORY);
+    vfs_set_name(root_dir, "/");
 
     auto test_file = new RamFSFile();
     test_file->set_flags(FSNodeFlags::FILE);
     vfs_set_name(test_file, "test.txt");
-    String data = "Hello VFS!";
+    String data = "Hello VFS!\r\n";
     vfs_write(test_file, 0, data.len(), data.c_str());
 
-    vfs_add_child(fs_root, test_file);
+    root_dir->add_child(test_file);
+    fs_root = root_dir;
 
     while (true) {
         __asm__ volatile("cli");

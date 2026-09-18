@@ -44,7 +44,7 @@ FSNode *FSNode::lookup(const char *search_name) {
 void FSNode::add_child(FSNode *child) {}
 
 void vfs_set_name(FSNode *node, const char *name) {
-    if (node == nullptr || node->flags != FSNodeFlags::DIRECTORY) return;
+    if (node == nullptr) return;
     node->set_name(name);
 }
 
