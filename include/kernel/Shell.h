@@ -9,7 +9,7 @@ inline void read_history(const char* file) {}
 inline void write_history(const char* file) {}
 inline void add_history(const String& input) {}
 
-typedef bool (*CommandCallback)(const Shell *shell, const String *args, int argCount, OutputStream &output);
+typedef bool (*CommandCallback)(Shell *shell, const String *args, int argCount, OutputStream &output);
 
 struct CommandDef {
     const char *name;
@@ -17,14 +17,15 @@ struct CommandDef {
     const char *help_text;
 };
 
-static bool builtin_ls(const Shell *shell, const String *args, int argCount, OutputStream &output);
-static bool builtin_cat(const Shell *shell, const String *args, int argCount, OutputStream &output);
-static bool builtin_touch(const Shell *shell, const String *args, int argCount, OutputStream &output);
-static bool builtin_mkdir(const Shell *shell, const String *args, int argCount, OutputStream &output);
-static bool builtin_echo(const Shell *shell, const String *args, int argCount, OutputStream &output);
-static bool builtin_display(const Shell *shell, const String *args, int argCount, OutputStream &output);
-static bool builtin_exit(const Shell *shell, const String *args, int argCount, OutputStream &output);
-static bool builtin_help(const Shell *shell, const String *args, int argCount, OutputStream &output);
+static bool builtin_cd(Shell *shell, const String *args, int argCount, OutputStream &output);
+static bool builtin_ls(Shell *shell, const String *args, int argCount, OutputStream &output);
+static bool builtin_cat(Shell *shell, const String *args, int argCount, OutputStream &output);
+static bool builtin_touch(Shell *shell, const String *args, int argCount, OutputStream &output);
+static bool builtin_mkdir(Shell *shell, const String *args, int argCount, OutputStream &output);
+static bool builtin_echo(Shell *shell, const String *args, int argCount, OutputStream &output);
+static bool builtin_display(Shell *shell, const String *args, int argCount, OutputStream &output);
+static bool builtin_exit(Shell *shell, const String *args, int argCount, OutputStream &output);
+static bool builtin_help(Shell *shell, const String *args, int argCount, OutputStream &output);
 
 class Shell {
 public:
@@ -41,11 +42,11 @@ public:
     void set_current_directory(FSNode *node);
 
     // Core evaluation loop
-    bool eval_user_input(const String& rawInput, OutputStream *out = nullptr) const;
+    bool eval_user_input(const String& rawInput, OutputStream *out = nullptr);
 
 private:
     FSNode *current_directory;
 
     Shell() = default;
-    bool process_builtin(const String& cmd, String* args, int argCount, OutputStream &output) const;
+    bool process_builtin(const String& cmd, String* args, int argCount, OutputStream &output);
 };

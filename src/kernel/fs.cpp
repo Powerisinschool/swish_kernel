@@ -122,3 +122,35 @@ FSNode *vfs_resolve_path(const char *path, FSNode *cwd) {
 
     return (current_node);
 }
+
+void vfs_split_path(const char *full_path, char *dirname, size_t dir_max, char *basename, size_t base_max) {
+    if (dir_max == 0 || base_max == 0) return;
+
+    const size_t len = strlen(full_path);
+    int last_slash = -1;
+
+    // Scan backwards to find the final delimiter
+    for (int i = len - 1; i >= 0; i--) {
+        if (full_path[i] == '/') {
+            last_slash = i;
+            break;
+        }
+    }
+
+    if (last_slash == -1) {
+        // No slashes found. Directory is current ("."), file is the whole string.
+        strncpy(dirname, ".", dir_max);
+        strncpy(basename, full_path, base_max);
+    } else if (last_slash == 0) {
+        // The file is located exactly at the root directory "/"
+        strncpy(dirname, "/", dir_max);
+        strncpy(basename, full_path + 1, base_max);
+    } else {
+        // Located in a nested directory
+        size_t copy_len = (last_slash < dir_max - 1) ? last_slash : dir_max - 1;
+        strncpy(dirname, full_path, copy_len);
+        dirname[copy_len] = '\0';
+
+        strncpy(basename, full_path + last_slash + 1, base_max);
+    }
+}

@@ -66,3 +66,4 @@ dirent *vfs_readdir(FSNode *node, uint32_t index);
 FSNode *vfs_lookup(FSNode *node, const char *search_name);
 void vfs_add_child(FSNode *node, FSNode *child);
 FSNode *vfs_resolve_path(const char *path, FSNode *cwd);
+void vfs_split_path(const char *full_path, char *dirname, size_t dir_max, char *basename, size_t base_max);

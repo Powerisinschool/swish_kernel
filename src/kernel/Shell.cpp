@@ -6,6 +6,7 @@
 #include "subsystems/input.h"
 
 static const CommandDef commands[] = {
+    {"cd", builtin_cd, "Change directory"},
     { "ls", builtin_ls, "List directory contents" },
     { "cat", builtin_cat, "Display file contents" },
     { "touch", builtin_touch, "Create an empty file" },
@@ -24,7 +25,7 @@ bool is_shell_builtin(const String& cmd) {
 }
 
 // Forward declaration of the built-in processor
-bool Shell::process_builtin(const String& cmd, String* args, const int argCount, OutputStream &output) const {
+bool Shell::process_builtin(const String& cmd, String* args, const int argCount, OutputStream &output) {
     for (auto & command : commands) {
         if (cmd == command.name) {
             return command.execute(this, args, argCount, output);
@@ -53,11 +54,10 @@ FSNode *Shell::get_current_directory() const {
 
 void Shell::set_current_directory(FSNode *node) {
     if (node == nullptr) return;
-    if (current_directory != nullptr) return;
     current_directory = node;
 }
 
-bool Shell::eval_user_input(const String &rawInput, OutputStream *out) const {
+bool Shell::eval_user_input(const String &rawInput, OutputStream *out) {
     if (rawInput.empty()) {
         return false;
     }
@@ -122,7 +122,29 @@ void list_directory(FSNode *node, OutputStream &output) {
 }
 
 // Builtin Commands
-bool builtin_ls(const Shell *shell, const String *args, const int argCount, OutputStream &output) {
+bool builtin_cd(Shell *shell, const String *args, const int argCount, OutputStream &output) {
+    if (argCount > 2) {
+        return false;
+    }
+
+    if (argCount == 1) return false; // TODO: change to home directory
+
+    const auto existing = vfs_resolve_path(args[1].c_str(), shell->get_current_directory());
+    if (existing == nullptr) {
+        output << "No such file or directory: " << args[1] << "\r\n";
+        return false;
+    }
+
+    if (existing->flags != FSNodeFlags::DIRECTORY) {
+        output << "Not a directory: " << args[1] << "\r\n";
+        return false;
+    }
+
+    shell->set_current_directory(existing);
+    return false;
+}
+
+bool builtin_ls(Shell *shell, const String *args, const int argCount, OutputStream &output) {
     if (argCount == 1) list_directory(shell->get_current_directory(), output);
     for (int i = 1; i < argCount; i++) {
         const auto existing = vfs_resolve_path(args[i].c_str(), shell->get_current_directory());
@@ -142,9 +164,9 @@ bool builtin_ls(const Shell *shell, const String *args, const int argCount, Outp
     return false;
 }
 
-bool builtin_cat(const Shell *shell, const String *args, const int argCount, OutputStream &output) {
+bool builtin_cat(Shell *shell, const String *args, const int argCount, OutputStream &output) {
     for (int i = 1; i < argCount; i++) {
-        const auto file = vfs_lookup(fs_root, args[i].c_str());
+        const auto file = vfs_resolve_path(args[i].c_str(), shell->get_current_directory());
         if (file == nullptr) {
             output << "No such file or directory: " << args[i] << "\r\n";
             continue;
@@ -167,11 +189,21 @@ bool builtin_cat(const Shell *shell, const String *args, const int argCount, Out
     return false;
 }
 
-bool builtin_touch(const Shell *shell, const String *args, const int argCount, OutputStream &output) {
+bool builtin_touch(Shell *shell, const String *args, const int argCount, OutputStream &output) {
     for (int i = 1; i < argCount; i++) {
+        char dirname[256];
+        char basename[128];
+
+        vfs_split_path(args[i].c_str(), dirname, sizeof(dirname), basename, sizeof(basename));
+
         // Check if the file already exists
-        const auto existing = vfs_lookup(fs_root, args[i].c_str());
-        if (existing != nullptr) {
+        const auto parent = vfs_resolve_path(dirname, shell->get_current_directory());
+        if (parent == nullptr || parent->flags != FSNodeFlags::DIRECTORY) {
+            output << "No such directory: " << dirname << "\r\n";
+            continue;
+        }
+
+        if (vfs_lookup(parent, basename) != nullptr) {
             // Real UNIX updates the modified timestamp here.
             // We do not have time tracking yet, so we just skip it.
             continue;
@@ -180,19 +212,29 @@ bool builtin_touch(const Shell *shell, const String *args, const int argCount, O
         // Instantiate the new file
         auto *new_file = new RamFSFile();
         new_file->set_flags(FSNodeFlags::FILE);
-        vfs_set_name(new_file, args[i].c_str());
+        vfs_set_name(new_file, basename);
 
         // Attach it to the root directory
-        vfs_add_child(fs_root, new_file);
+        vfs_add_child(parent, new_file);
     }
     return false;
 }
 
-bool builtin_mkdir(const Shell *shell, const String *args, const int argCount, OutputStream &output) {
+bool builtin_mkdir(Shell *shell, const String *args, const int argCount, OutputStream &output) {
     for (int i = 1; i < argCount; i++) {
+        char dirname[256];
+        char basename[128];
+
+        vfs_split_path(args[i].c_str(), dirname, sizeof(dirname), basename, sizeof(basename));
+
         // Check if a node with that name exists
-        const auto existing = vfs_lookup(fs_root, args[i].c_str());
-        if (existing != nullptr) {
+        const auto parent = vfs_resolve_path(dirname, shell->get_current_directory());
+        if (parent == nullptr || parent->flags != FSNodeFlags::DIRECTORY) {
+            output << "No such directory: " << dirname << "\r\n";
+            continue;
+        }
+
+        if (vfs_lookup(parent, basename) != nullptr) {
             output << args[i] << " already exists" << "\r\n";
             continue;
         }
@@ -200,14 +242,14 @@ bool builtin_mkdir(const Shell *shell, const String *args, const int argCount, O
         // Instantiate the new directory
         auto *new_dir = new RamFSDirectory();
         new_dir->set_flags(FSNodeFlags::DIRECTORY);
-        vfs_set_name(new_dir, args[i].c_str());
+        vfs_set_name(new_dir, basename);
 
-        vfs_add_child(fs_root, new_dir);
+        vfs_add_child(parent, new_dir);
     }
     return false;
 }
 
-bool builtin_echo(const Shell *shell, const String *args, const int argCount, OutputStream &output) {
+bool builtin_echo(Shell *shell, const String *args, const int argCount, OutputStream &output) {
     for (int i = 1; i < argCount - 1; i++) {
         output << args[i] << " ";
     }
@@ -215,16 +257,16 @@ bool builtin_echo(const Shell *shell, const String *args, const int argCount, Ou
     return false;
 }
 
-bool builtin_display(const Shell *shell, const String *args, const int argCount, OutputStream &output) {
+bool builtin_display(Shell *shell, const String *args, const int argCount, OutputStream &output) {
     Input::switch_to_gui();
     return false;
 }
 
-bool builtin_exit(const Shell *shell, const String *args, const int argCount, OutputStream &output) {
+bool builtin_exit(Shell *shell, const String *args, const int argCount, OutputStream &output) {
     return true;
 }
 
-bool builtin_help(const Shell *shell, const String *args, const int argCount, OutputStream &output) {
+bool builtin_help(Shell *shell, const String *args, const int argCount, OutputStream &output) {
     output << "Type a command `help` for the command's help.\r\n";
     output << "Available commands:\r\n";
     for (auto & command : commands) {
