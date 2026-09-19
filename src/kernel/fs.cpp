@@ -114,6 +114,12 @@ FSNode *vfs_resolve_path(const char *path, FSNode *cwd) {
         while (*path == '/') path++; // Consume all consecutive slashes
 
         if (strlen(segment) == 1 && segment[0] == '.') continue;
+        if (strlen(segment) == 2 && segment[0] == '.' && segment[1] == '.') {
+            if (current_node->parent != nullptr) {
+                current_node = current_node->parent;
+            }
+            continue;
+        }
 
         if (strlen(segment) == 0) break;
 

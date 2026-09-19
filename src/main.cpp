@@ -106,8 +106,8 @@ extern "C" [[noreturn]] void _start()
 
     // init_heap(reinterpret_cast<uintptr_t>(&initial_heap_space), sizeof(initial_heap_space));
 
-    cout << "Hello" << ' ' << "World" << " from Flanterm!\r\n";
-    cout << "Framebuffer resolution: " << static_cast<int64_t>(fb->width) << "x" << static_cast<int64_t>(fb->height) << "\r\n";
+    // cout << "Hello" << ' ' << "World" << " from Flanterm!\r\n";
+    // cout << "Framebuffer resolution: " << static_cast<int64_t>(fb->width) << "x" << static_cast<int64_t>(fb->height) << "\r\n";
 
     Input::initialize();
     Mouse::initialize();
@@ -134,7 +134,8 @@ extern "C" [[noreturn]] void _start()
 
     constexpr size_t MAX_LINE_LEN = 1024;
 
-    k_print("Kernel booted. Memory managed by Limine.\r\n\n");
+    // k_print("Kernel booted. Memory managed by Limine.\r\n\n");
+    k_print("Kernel booted.\r\n\n");
 
     cout << "user@kernel:~$ ";
     // while (true) {

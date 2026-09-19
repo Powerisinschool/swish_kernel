@@ -31,6 +31,7 @@ public:
     uint32_t length;
     uint32_t inode;
     uint32_t impl;
+    FSNode *parent;
 
     virtual ~FSNode() = default;
 

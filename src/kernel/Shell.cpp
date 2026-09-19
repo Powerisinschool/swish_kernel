@@ -98,10 +98,7 @@ bool Shell::eval_user_input(const String &rawInput, OutputStream *out) {
 
     const String cmd = args[0];
 
-    if (is_shell_builtin(cmd))
-    {
-        return process_builtin(cmd, args, argCount, output);
-    }
+    if (is_shell_builtin(cmd)) return process_builtin(cmd, args, argCount, output);
     output << "Command not found or external execution not yet supported: " << cmd.c_str() << "\r\n";
 
     return false;
@@ -123,9 +120,7 @@ void list_directory(FSNode *node, OutputStream &output) {
 
 // Builtin Commands
 bool builtin_cd(Shell *shell, const String *args, const int argCount, OutputStream &output) {
-    if (argCount > 2) {
-        return false;
-    }
+    if (argCount > 2) return false;
 
     if (argCount == 1) return false; // TODO: change to home directory
 
