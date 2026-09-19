@@ -38,6 +38,5 @@ FSNode *RamFSDirectory::lookup(const char *search_name) {
 }
 
 void RamFSDirectory::add_child(FSNode *child) {
-    child->parent = this;
     children.push_back(child);
 }

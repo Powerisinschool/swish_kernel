@@ -81,6 +81,7 @@ FSNode *vfs_lookup(FSNode *node, const char *search_name) {
 void vfs_add_child(FSNode *node, FSNode *child) {
     if (node == nullptr || node->flags != FSNodeFlags::DIRECTORY) return;
     node->add_child(child);
+    child->parent = node;
 }
 
 bool FSNode::operator==(const FSNode &other) const {

@@ -179,7 +179,7 @@ extern "C" [[noreturn]] void _start()
                 Input::fetch_line(buffer, MAX_LINE_LEN);
                 if (shell.eval_user_input(String(buffer)))
                     break;
-                cout << "user@kernel:~$ ";
+                cout << "user@kernel:" << shell.get_current_directory()->name << "$ ";
 
                 Input::flush_terminal_updates();
             }
