@@ -93,14 +93,12 @@ bool FSNode::operator==(const String &comp) const {
 
 FSNode *vfs_resolve_path(const char *path, FSNode *cwd) {
     if (path == nullptr || *path == '\0') return nullptr;
+
     FSNode *current_node = cwd;
+
     if (*path == '/') {
         current_node = fs_root;
-        path++;
-    }
-
-    if (strlen(path) > 2 && *path == '.' && *(path + 1) == '/') {
-        path += 2;
+        while (*path == '/') path++;
     }
 
     while (current_node != nullptr && current_node->flags == FSNodeFlags::DIRECTORY) {
@@ -113,13 +111,14 @@ FSNode *vfs_resolve_path(const char *path, FSNode *cwd) {
         }
         segment[index] = '\0';
 
-        if (strlen(segment) == 0 && *path == '\0') {
-            return current_node;
-        }
+        while (*path == '/') path++; // Consume all consecutive slashes
+
+        if (strlen(segment) == 1 && segment[0] == '.') continue;
+
+        if (strlen(segment) == 0) break;
 
         current_node = vfs_lookup(current_node, segment);
-        if (*path == '\0') return current_node;
     }
 
-    return (nullptr);
+    return (current_node);
 }
