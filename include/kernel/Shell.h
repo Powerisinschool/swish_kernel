@@ -45,7 +45,7 @@ public:
     bool eval_user_input(const String& rawInput, OutputStream *out = nullptr);
 
 private:
-    FSNode *current_directory;
+    FSNode *current_directory = nullptr;
 
     Shell() = default;
     bool process_builtin(const String& cmd, String* args, int argCount, OutputStream &output);

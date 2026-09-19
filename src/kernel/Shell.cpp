@@ -115,14 +115,29 @@ void list_directory(FSNode *node, OutputStream &output) {
         index++;
         entry = vfs_readdir(node, index);
     }
-    output << "\r\n";
+
+    if (index > 0) output << "\r\n"; // Only go to a newline if there was output
 }
 
 // Builtin Commands
 bool builtin_cd(Shell *shell, const String *args, const int argCount, OutputStream &output) {
     if (argCount > 2) return false;
 
-    if (argCount == 1) return false; // TODO: change to home directory
+    if (argCount == 1) {
+        const auto dir = vfs_resolve_path(shell->homeEnv.c_str(), shell->get_current_directory());
+        if (dir == nullptr) {
+            output << "Could not resolve home directory.\r\n";
+            return false;
+        }
+
+        if (dir->flags != FSNodeFlags::DIRECTORY) {
+            output << "Home directory is not a directory.\r\n";
+            return false;
+        }
+
+        shell->set_current_directory(dir);
+        return false;
+}
 
     const auto existing = vfs_resolve_path(args[1].c_str(), shell->get_current_directory());
     if (existing == nullptr) {
@@ -154,7 +169,7 @@ bool builtin_ls(Shell *shell, const String *args, const int argCount, OutputStre
             output << args[i] << ": " << "\r\n";
             list_directory(existing, output);
         }
-        if (i < argCount) output << "\r\n";
+        if (i < (argCount - 1)) output << "\r\n";
     }
     return false;
 }
