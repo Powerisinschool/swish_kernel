@@ -90,3 +90,36 @@ bool FSNode::operator==(const FSNode &other) const {
 bool FSNode::operator==(const String &comp) const {
     return (comp == name);
 }
+
+FSNode *vfs_resolve_path(const char *path, FSNode *cwd) {
+    if (path == nullptr || *path == '\0') return nullptr;
+    FSNode *current_node = cwd;
+    if (*path == '/') {
+        current_node = fs_root;
+        path++;
+    }
+
+    if (strlen(path) > 2 && *path == '.' && *(path + 1) == '/') {
+        path += 2;
+    }
+
+    while (current_node != nullptr && current_node->flags == FSNodeFlags::DIRECTORY) {
+        char segment[128];
+        size_t index = 0;
+
+        while (*path != '/' && *path != '\0') {
+            segment[index++] = *path;
+            path++;
+        }
+        segment[index] = '\0';
+
+        if (strlen(segment) == 0 && *path == '\0') {
+            return current_node;
+        }
+
+        current_node = vfs_lookup(current_node, segment);
+        if (*path == '\0') return current_node;
+    }
+
+    return (nullptr);
+}

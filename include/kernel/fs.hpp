@@ -20,6 +20,7 @@ struct FSNodeFlags {
 
 struct dirent {
     uint32_t inode;
+    FSNodeFlags type;
     char name[128];
 };
 
@@ -64,3 +65,4 @@ void vfs_close(FSNode *node);
 dirent *vfs_readdir(FSNode *node, uint32_t index);
 FSNode *vfs_lookup(FSNode *node, const char *search_name);
 void vfs_add_child(FSNode *node, FSNode *child);
+FSNode *vfs_resolve_path(const char *path, FSNode *cwd);

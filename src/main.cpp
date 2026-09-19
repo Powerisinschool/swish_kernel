@@ -164,6 +164,8 @@ extern "C" [[noreturn]] void _start()
     root_dir->add_child(test_file);
     fs_root = root_dir;
 
+    shell.set_current_directory(fs_root);
+
     while (true) {
         __asm__ volatile("cli");
         Input::process_events();
@@ -187,7 +189,6 @@ extern "C" [[noreturn]] void _start()
             compositor.render();
         }
 
-        // arch_halt_cpu();
         arch_halt_cpu();
     }
 

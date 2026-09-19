@@ -25,7 +25,7 @@ dirent *RamFSDirectory::readdir(const uint32_t index) {
     if (index >= children.size()) return (nullptr);
 
     const auto &child = children[index];
-    const auto entry = new dirent{child->inode};
+    const auto entry = new dirent{child->inode, child->flags};
     strncpy(entry->name, child->name, 128);
     return (entry);
 }
