@@ -12,6 +12,8 @@
 #include "gui/Graphics.h"
 #include "gui/TerminalWindow.h"
 #include "gui/Window.h"
+#include "kernel/fs.hpp"
+#include "kernel/ramfs.hpp"
 #include "kernel/String.hpp"
 #include "kernel/Shell.h"
 #include "subsystems/input.h"
@@ -104,8 +106,8 @@ extern "C" [[noreturn]] void _start()
 
     // init_heap(reinterpret_cast<uintptr_t>(&initial_heap_space), sizeof(initial_heap_space));
 
-    cout << "Hello" << ' ' << "World" << " from Flanterm!\r\n";
-    cout << "Framebuffer resolution: " << static_cast<int64_t>(fb->width) << "x" << static_cast<int64_t>(fb->height) << "\r\n";
+    // cout << "Hello" << ' ' << "World" << " from Flanterm!\r\n";
+    // cout << "Framebuffer resolution: " << static_cast<int64_t>(fb->width) << "x" << static_cast<int64_t>(fb->height) << "\r\n";
 
     Input::initialize();
     Mouse::initialize();
@@ -132,7 +134,8 @@ extern "C" [[noreturn]] void _start()
 
     constexpr size_t MAX_LINE_LEN = 1024;
 
-    k_print("Kernel booted. Memory managed by Limine.\r\n\n");
+    // k_print("Kernel booted. Memory managed by Limine.\r\n\n");
+    k_print("Kernel booted.\r\n\n");
 
     cout << "user@kernel:~$ ";
     // while (true) {
@@ -149,6 +152,26 @@ extern "C" [[noreturn]] void _start()
 
     Input::set_compositor(&compositor);
 
+    auto root_dir = new RamFSDirectory();
+    vfs_set_name(root_dir, "/");
+    fs_root = root_dir;
+
+    auto test_file = new RamFSFile();
+    vfs_set_name(test_file, "test.txt");
+    String data = "Hello VFS!\r\n";
+    vfs_write(test_file, 0, data.len(), data.c_str());
+    vfs_add_child(root_dir, test_file);
+
+    auto mnt_node = new RamFSDirectory();
+    vfs_set_name(mnt_node, "mnt");
+    vfs_add_child(root_dir, mnt_node);
+
+    auto second_root_dir = new RamFSDirectory();
+    vfs_set_name(second_root_dir, "second");
+    vfs_mount(mnt_node, second_root_dir);
+
+    shell.set_current_directory(fs_root);
+
     while (true) {
         __asm__ volatile("cli");
         Input::process_events();
@@ -161,7 +184,7 @@ extern "C" [[noreturn]] void _start()
                 Input::fetch_line(buffer, MAX_LINE_LEN);
                 if (shell.eval_user_input(String(buffer)))
                     break;
-                cout << "user@kernel:~$ ";
+                cout << "user@kernel:" << shell.get_current_directory()->name << "$ ";
 
                 Input::flush_terminal_updates();
             }
@@ -172,7 +195,6 @@ extern "C" [[noreturn]] void _start()
             compositor.render();
         }
 
-        // arch_halt_cpu();
         arch_halt_cpu();
     }
 
