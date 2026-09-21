@@ -22,6 +22,7 @@ static bool builtin_ls(Shell *shell, const String *args, int argCount, OutputStr
 static bool builtin_cat(Shell *shell, const String *args, int argCount, OutputStream &output);
 static bool builtin_touch(Shell *shell, const String *args, int argCount, OutputStream &output);
 static bool builtin_mkdir(Shell *shell, const String *args, int argCount, OutputStream &output);
+static bool builtin_mount(Shell *shell, const String *args, int argCount, OutputStream &output);
 static bool builtin_echo(Shell *shell, const String *args, int argCount, OutputStream &output);
 static bool builtin_display(Shell *shell, const String *args, int argCount, OutputStream &output);
 static bool builtin_exit(Shell *shell, const String *args, int argCount, OutputStream &output);

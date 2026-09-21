@@ -11,6 +11,7 @@ static const CommandDef commands[] = {
     { "cat", builtin_cat, "Display file contents" },
     { "touch", builtin_touch, "Create an empty file" },
     { "mkdir", builtin_mkdir, "Create an empty directory" },
+    { "mount", builtin_mount, "Create an empty directory" },
     { "echo", builtin_echo, "Print text to the terminal" },
     { "display", builtin_display, "Switch to the graphical interface" },
     { "exit", builtin_exit, "Exit the shell environment" },
@@ -221,7 +222,6 @@ bool builtin_touch(Shell *shell, const String *args, const int argCount, OutputS
 
         // Instantiate the new file
         auto *new_file = new RamFSFile();
-        new_file->set_flags(FSNodeFlags::FILE);
         vfs_set_name(new_file, basename);
 
         // Attach it to the root directory
@@ -251,11 +251,38 @@ bool builtin_mkdir(Shell *shell, const String *args, const int argCount, OutputS
 
         // Instantiate the new directory
         auto *new_dir = new RamFSDirectory();
-        new_dir->set_flags(FSNodeFlags::DIRECTORY);
         vfs_set_name(new_dir, basename);
 
         vfs_add_child(parent, new_dir);
     }
+    return false;
+}
+
+bool builtin_mount(Shell *shell, const String *args, int argCount, OutputStream &output) {
+    if (argCount < 3) {
+        output << "Not enough arguments\r\n";
+        return false;
+    }
+
+    const auto source_node = vfs_resolve_path(args[1].c_str(), shell->get_current_directory());
+    if (source_node == nullptr) {
+        output << "No such file or directory: " << args[1] << "\r\n";
+        return false;
+    }
+
+    const auto target_node = vfs_resolve_path(args[2].c_str(), shell->get_current_directory());
+    if (target_node == nullptr) {
+        output << "No such file or directory: " << args[2] << "\r\n";
+        return false;
+    }
+
+    if (source_node == target_node) {
+        output << "Cannot mount to self yet" << "\r\n";
+        return false;
+    }
+
+    vfs_mount(target_node, source_node);
+
     return false;
 }
 

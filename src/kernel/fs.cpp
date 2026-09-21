@@ -14,10 +14,6 @@ bool FSNodeFlags::operator==(const FSNodeFlags &other) const {
 
 FSNode *fs_root = nullptr;
 
-void FSNode::set_flags(FSNodeFlags &type) {
-    flags = type;
-}
-
 void FSNode::set_name(const char *new_name) {
     strncpy(name, new_name, strlen(new_name) + 1);
 }
@@ -117,6 +113,12 @@ FSNode *vfs_resolve_path(const char *path, FSNode *cwd) {
         if (strlen(segment) == 1 && segment[0] == '.') continue;
         if (strlen(segment) == 2 && segment[0] == '.' && segment[1] == '.') {
             if (current_node->parent != nullptr) {
+                if (current_node->parent->flags == FSNodeFlags::MOUNTPOINT &&
+                    current_node->parent->mount_target == current_node &&
+                    current_node->parent->parent != nullptr) {
+                    current_node = current_node->parent->parent;
+                    continue;
+                }
                 current_node = current_node->parent;
             }
             continue;
@@ -125,6 +127,10 @@ FSNode *vfs_resolve_path(const char *path, FSNode *cwd) {
         if (strlen(segment) == 0) break;
 
         current_node = vfs_lookup(current_node, segment);
+
+        if (current_node != nullptr && current_node->flags == FSNodeFlags::MOUNTPOINT) {
+            if (current_node->mount_target != nullptr) current_node = current_node->mount_target;
+        }
     }
 
     return (current_node);
@@ -154,10 +160,23 @@ void vfs_split_path(const char *full_path, char *dirname, size_t dir_max, char *
         strncpy(basename, full_path + 1, base_max);
     } else {
         // Located in a nested directory
-        size_t copy_len = (last_slash < dir_max - 1) ? last_slash : dir_max - 1;
+        const size_t copy_len = (last_slash < dir_max - 1) ? last_slash : dir_max - 1;
         strncpy(dirname, full_path, copy_len);
         dirname[copy_len] = '\0';
 
         strncpy(basename, full_path + last_slash + 1, base_max);
     }
+}
+
+bool vfs_mount(FSNode *mountpoint, FSNode *new_fs_root) {
+    if (mountpoint == nullptr || new_fs_root == nullptr) return (false);
+    if (new_fs_root->flags != FSNodeFlags::DIRECTORY) return (false);
+    if (mountpoint->flags != FSNodeFlags::DIRECTORY) return (false);
+
+    mountpoint->flags = FSNodeFlags::MOUNTPOINT;
+    mountpoint->mount_target = new_fs_root;
+
+    new_fs_root->parent = mountpoint;
+
+    return (true);
 }

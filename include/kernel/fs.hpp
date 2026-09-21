@@ -31,12 +31,14 @@ public:
     uint32_t length;
     uint32_t inode;
     uint32_t impl;
-    FSNode *parent;
+    FSNode *parent = nullptr;
+    FSNode *mount_target = nullptr;
+
+    explicit FSNode(const FSNodeFlags node_flags) : flags(node_flags), length(0), inode(0), impl(0) {}
 
     virtual ~FSNode() = default;
 
     // Helper Functions
-    virtual void set_flags(FSNodeFlags &type);
     virtual void set_name(const char *new_name);
 
     // Core File I/O
@@ -68,3 +70,4 @@ FSNode *vfs_lookup(FSNode *node, const char *search_name);
 void vfs_add_child(FSNode *node, FSNode *child);
 FSNode *vfs_resolve_path(const char *path, FSNode *cwd);
 void vfs_split_path(const char *full_path, char *dirname, size_t dir_max, char *basename, size_t base_max);
+bool vfs_mount(FSNode *mountpoint, FSNode *new_fs_root);
