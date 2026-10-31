@@ -4,7 +4,7 @@ Swish Kernel is a custom 64-bit bare-metal operating system kernel built in C++ 
 
 ## Core Features
 
-* **Architecture:** Built specifically for the x86_64 architecture with custom Global Descriptor Table (GDT) and Interrupt Descriptor Table (IDT) implementations.
+* **Architecture:** Built specifically for the x86_64 architecture with custom ~Global Descriptor Table (GDT)~ and Interrupt Descriptor Table (IDT) implementations.
 * **Bootloader:** Utilizes the Limine boot protocol for system initialization.
 * **GUI Compositor:** Includes a custom graphical subsystem supporting windows, graphics rendering, and custom fonts.
 * **Hardware Drivers:** Features built-in Programmable Interrupt Controller (PIC) support, alongside drivers for PS/2 keyboards and mice.
